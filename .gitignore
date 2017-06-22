@@ -1,52 +1,27 @@
-# Prerequisites
-*.d
+####### Listing files
+*.COD
+*.HTM
+*.I
+*.LST
+*.MAP
+*.M51
+*.M66
+*.SCR
 
-# Object files
-*.o
-*.ko
-*.obj
-*.elf
+######## Object and HEX Files
+*.AXF
+*.D
+*.O
+*.SBR
+*.CRF
+*.ELF
+*.H86
+*.bin
 
-# Linker output
-*.ilk
-*.map
-*.exp
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
-
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
-
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
-
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
+######## Other Files
+*.BAK
+*.LNP
+*.iex
+*.dep
+*.uvgui.*
+Backup/
