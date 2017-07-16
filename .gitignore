@@ -24,4 +24,6 @@
 *.iex
 *.dep
 *.uvgui.*
+*.uvguix.*
+
 Backup/
