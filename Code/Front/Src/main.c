@@ -54,13 +54,19 @@ UART_HandleTypeDef huart3;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
-uint8_t master_buffer_tx[10]={0x30,0x31,0x32,0x33,0x34,0x35,0x36,0x37,0x38,0x39};
-uint8_t slave_buffer_tx[10]={0x40,0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49};
+uint8_t master_buffer_tx[10]={0x40,0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49};
+uint8_t slave_buffer_tx[10]={0x30,0x31,0x32,0x33,0x34,0x35,0x36,0x37,0x38,0x39};
+
+uint8_t IT_master_tx[2] = {0x30, 0x31};
+uint8_t IT_master_rx[2] = {0x32, 0x33};
+
+uint8_t IT_slave_tx[2] = {0x34, 0x35};
+uint8_t IT_slave_rx[2] = {0x36, 0x37};
 
 uint8_t master_buffer_rx[10]={1,2,3,4,5,6,8,7,9,10};
 uint8_t slave_buffer_rx[10]={9,8,7,6,5,4,3,2,1,10};
 
-uint8_t c=0x32;
+uint8_t c=0x55;
 char *buffer="START";
 
 /* USER CODE END PV */
@@ -123,23 +129,30 @@ int main(void)
   
   tickstart = HAL_GetTick();
   
-  HAL_SPI_Receive_IT(&hspi1, master_buffer_rx, 10);
-  HAL_SPI_Receive_IT(&hspi2, slave_buffer_rx, 10);
+
+  HAL_UART_Receive_IT(&huart3, &c, 1);
   
+  
+  //HAL_SPI_Receive_IT(&hspi2, IT_slave_rx,10);
+  //HAL_SPI_Transmit_IT(&hspi2, slave_buffer_tx, 10);
+  
+  
+  
+  printf("Hello \r\n");
+  
+
   /* USER CODE END 2 */
 
+  HAL_UART_Transmit(&huart3, IT_master_rx, 2,2);
+  printf("\r\n");
+
+  HAL_UART_Transmit(&huart3, IT_slave_rx, 2,2);
+  printf("\r\n");
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {	
-
-	HAL_SPI_Transmit(&hspi1, master_buffer_tx, 10,1);
-	HAL_SPI_Transmit(&hspi2, slave_buffer_tx, 10,1);
-	  
-	  //while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
-	  //while(HAL_SPI_GetState(&hspi2) != HAL_SPI_STATE_READY);
-	  
-	  
+	
 	 /*if((HAL_GetTick() - tickstart) >= 200)
 	{
 		HAL_UART_Transmit(&huart3, master_buffer_rx, 10,1);
@@ -147,7 +160,7 @@ int main(void)
 		tickstart = HAL_GetTick();
 	}*/
 	  
-	  //HAL_Delay(50);
+	  //HAL_Delay(300);
 	  
 	  
   /* USER CODE END WHILE */
@@ -399,10 +412,55 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
 }
 
 /* USER CODE BEGIN 4 */
 
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if(huart->Instance == huart3.Instance){
+		HAL_UART_Receive_IT(&huart3, &c, 1);
+		HAL_SPI_Transmit(&hspi1, IT_master_tx, 2, 1);
+		HAL_SPI_Transmit(&hspi2, IT_slave_tx,2, 1);
+		HAL_SPI_Receive_IT(&hspi1, IT_master_rx,2);
+		HAL_SPI_Receive_IT(&hspi2, IT_slave_rx,2);
+		
+		HAL_UART_Transmit(&huart3, IT_master_rx, 2,2);
+		printf("\r\n");
+		HAL_UART_Transmit(&huart3, IT_slave_rx, 2,2);
+		printf("\r\n");
+		
+	}
+}
+
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+	if(hspi->Instance == hspi1.Instance)
+	{
+		HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+		
+	}
+	if(hspi->Instance == hspi2.Instance)
+	{ 
+		HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+		
+	}
+	
+
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if(HAL_GPIO_ReadPin(USER_Btn_GPIO_Port, USER_Btn_Pin))
+	{
+		HAL_SPI_Transmit(&hspi2, &c, 1, 1);
+	}
+	
+}
 	
 /* USER CODE END 4 */
 
