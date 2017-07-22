@@ -47,27 +47,24 @@
 /* Private variables ---------------------------------------------------------*/
 
 SPI_HandleTypeDef hspi1;
-SPI_HandleTypeDef hspi2;
 
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
-uint8_t master_buffer_tx[10]={0x40,0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49};
-uint8_t slave_buffer_tx[10]={0x30,0x31,0x32,0x33,0x34,0x35,0x36,0x37,0x38,0x39};
+int mpu6000_cnt=0;
+uint8_t MPU_data[2];
 
-uint8_t IT_master_tx[2] = {0x30, 0x31};
-uint8_t IT_master_rx[2] = {0x32, 0x33};
-
-uint8_t IT_slave_tx[2] = {0x34, 0x35};
-uint8_t IT_slave_rx[2] = {0x36, 0x37};
-
-uint8_t master_buffer_rx[10]={1,2,3,4,5,6,8,7,9,10};
-uint8_t slave_buffer_rx[10]={9,8,7,6,5,4,3,2,1,10};
+uint8_t IT_master_tx[] = {0xf5, 0x00};
+uint8_t IT_master_rx[] = {0x30, 0x30};
+uint8_t regi = 0x3D;
 
 uint8_t c=0x55;
 char *buffer="START";
+
+static void writebyte(uint8_t addr, uint8_t data);
+static void readbyte(uint8_t addr, uint8_t data);
 
 /* USER CODE END PV */
 
@@ -76,7 +73,6 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_SPI1_Init(void);
-static void MX_SPI2_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -99,7 +95,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 	
-	uint32_t tickstart = 0;
+  uint32_t tickstart = 0;
 
   /* USER CODE END 1 */
 
@@ -123,35 +119,28 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_SPI1_Init();
-  MX_SPI2_Init();
 
   /* USER CODE BEGIN 2 */
   
   tickstart = HAL_GetTick();
-  
 
   HAL_UART_Receive_IT(&huart3, &c, 1);
-  
-  
-  //HAL_SPI_Receive_IT(&hspi2, IT_slave_rx,10);
-  //HAL_SPI_Transmit_IT(&hspi2, slave_buffer_tx, 10);
-  
-  
-  
+  //HAL_SPI_TransmitReceive_IT(&hspi1, IT_master_tx, IT_master_rx, 1);
+    
   printf("Hello \r\n");
-  
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
 
+ writebyte(0x6B, 0x08);
+ 
+ //writebyte(0x75, 0x71);
   /* USER CODE END 2 */
 
-  HAL_UART_Transmit(&huart3, IT_master_rx, 2,2);
-  printf("\r\n");
-
-  HAL_UART_Transmit(&huart3, IT_slave_rx, 2,2);
-  printf("\r\n");
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
-  {	
+  {		
+	readbyte(regi, 0x80);	  
+	
 	
 	 /*if((HAL_GetTick() - tickstart) >= 200)
 	{
@@ -160,7 +149,7 @@ int main(void)
 		tickstart = HAL_GetTick();
 	}*/
 	  
-	  //HAL_Delay(300);
+	  HAL_Delay(300);
 	  
 	  
   /* USER CODE END WHILE */
@@ -189,9 +178,15 @@ void SystemClock_Config(void)
 
     /**Initializes the CPU, AHB and APB busses clocks 
     */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = 16;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLN = 96;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV6;
+  RCC_OscInitStruct.PLL.PLLQ = 2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -201,12 +196,12 @@ void SystemClock_Config(void)
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -238,41 +233,17 @@ static void MX_SPI1_Init(void)
   hspi1.Init.Mode = SPI_MODE_MASTER;
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
   hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
   hspi1.Init.CRCPolynomial = 7;
   hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-}
-
-/* SPI2 init function */
-static void MX_SPI2_Init(void)
-{
-
-  hspi2.Instance = SPI2;
-  hspi2.Init.Mode = SPI_MODE_SLAVE;
-  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi2.Init.CRCPolynomial = 7;
-  hspi2.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-  hspi2.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
-  if (HAL_SPI_Init(&hspi2) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -335,6 +306,9 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOG_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LD3_Pin|LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
@@ -361,6 +335,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SPI1_NSS_Pin */
+  GPIO_InitStruct.Pin = SPI1_NSS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(SPI1_NSS_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : RMII_TXD1_Pin */
   GPIO_InitStruct.Pin = RMII_TXD1_Pin;
@@ -420,20 +401,39 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+static void writebyte(uint8_t addr, uint8_t data)	//레지스터를 쓰거나 읽는다.
+{
+	//-------------------------------------------------------
+	// SPI1 Write_a_byte (addr : 레지스트 주소값  data : 원하는 데이터)  
+	//-------------------------------------------------------\
+
+	uint8_t tmp_txbuffer[2] = {addr, data};
+	
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+	
+	HAL_SPI_Transmit(&hspi1, tmp_txbuffer, 2,1);	
+			
+	HAL_SPI_Receive(&hspi1, MPU_data ,2,1);
+
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);	
+	
+	printf(" %d %d\r\n", MPU_data[0], MPU_data[1]);
+}
+
+static void readbyte(uint8_t addr, uint8_t data)
+{
+	uint8_t Read_Flag = 0x80;
+	writebyte(addr | Read_Flag, data);
+}
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	if(huart->Instance == huart3.Instance){
-		HAL_UART_Receive_IT(&huart3, &c, 1);
+		/*HAL_UART_Receive_IT(&huart3, &c, 1);
+		
 		HAL_SPI_Transmit(&hspi1, IT_master_tx, 2, 1);
-		HAL_SPI_Transmit(&hspi2, IT_slave_tx,2, 1);
-		HAL_SPI_Receive_IT(&hspi1, IT_master_rx,2);
-		HAL_SPI_Receive_IT(&hspi2, IT_slave_rx,2);
-		
-		HAL_UART_Transmit(&huart3, IT_master_rx, 2,2);
-		printf("\r\n");
-		HAL_UART_Transmit(&huart3, IT_slave_rx, 2,2);
-		printf("\r\n");
-		
+		HAL_SPI_Receive_IT(&hspi1, IT_master_rx,2);*/
+
 	}
 }
 
@@ -441,23 +441,18 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 {
 	if(hspi->Instance == hspi1.Instance)
 	{
+		HAL_SPI_TransmitReceive(&hspi1, IT_master_tx, IT_master_rx, 1 ,1);
 		HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 		
+		HAL_UART_Transmit(&huart3, IT_master_rx, 1,2);
+		printf("\r\n");
 	}
-	if(hspi->Instance == hspi2.Instance)
-	{ 
-		HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-		
-	}
-	
-
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(HAL_GPIO_ReadPin(USER_Btn_GPIO_Port, USER_Btn_Pin))
 	{
-		HAL_SPI_Transmit(&hspi2, &c, 1, 1);
 	}
 	
 }
