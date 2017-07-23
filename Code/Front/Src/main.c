@@ -41,6 +41,7 @@
 
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
+#include "MPU9250.h"
 
 /* USER CODE END Includes */
 
@@ -53,18 +54,11 @@ UART_HandleTypeDef huart3;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
-int mpu6000_cnt=0;
-uint8_t MPU_data[2];
-
-uint8_t IT_master_tx[] = {0xf5, 0x00};
-uint8_t IT_master_rx[] = {0x30, 0x30};
-uint8_t regi = 0x3D;
+MPU_SelectTypeDef hmpu1;
+//uint8_t response[21];
 
 uint8_t c=0x55;
-char *buffer="START";
 
-static void writebyte(uint8_t addr, uint8_t data);
-static void readbyte(uint8_t addr, uint8_t data);
 
 /* USER CODE END PV */
 
@@ -76,6 +70,8 @@ static void MX_SPI1_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
+
+static void MPU1_Init(void);
 
 int fputc(int ch, FILE *f)
 {
@@ -94,9 +90,9 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	
   uint32_t tickstart = 0;
-
+  uint16_t i=0;
+	
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -105,6 +101,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  
 
   /* USER CODE END Init */
 
@@ -121,6 +118,7 @@ int main(void)
   MX_SPI1_Init();
 
   /* USER CODE BEGIN 2 */
+  MPU1_Init();
   
   tickstart = HAL_GetTick();
 
@@ -128,29 +126,76 @@ int main(void)
   //HAL_SPI_TransmitReceive_IT(&hspi1, IT_master_tx, IT_master_rx, 1);
     
   printf("Hello \r\n");
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-
- writebyte(0x6B, 0x08);
- 
- //writebyte(0x75, 0x71);
+  //MPU9250_deselect(&hmpu1);
+  
   /* USER CODE END 2 */
+  printf("Press any key to continue \r\n");
 
+	if (MPU9250_whoami(&hmpu1) == 0x71){
+
+		printf("Successful connection \r\n");
+
+	}
+	else{
+
+		printf("Failed connection: ");
+
+		printf("%x \r\n", MPU9250_whoami(&hmpu1));
+	}
+
+
+	if (MPU9250_AK8963_whoami(&hmpu1) == 0x48){
+
+		printf("Successful connection to mag\r\n");
+
+	}
+	else{
+
+		printf("Failed connection to mag: \r\n");
+
+		printf("%x \r\n", MPU9250_AK8963_whoami(&hmpu1));
+
+	}
+	
+	MPU9250_init(&hmpu1);
+
+	printf("Send any char to begin main loop.");
+
+	
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
-  {		
-	readbyte(regi, 0x80);	  
-	
-	
+  {	  
+	 
+	MPU9250_read_gyro(&hmpu1);
+	  
+	//MPU9250_read_acc(&hmpu1);
+	  
+	printf("GX : %f \t", hmpu1.gyro_data[0]);
+
+	printf("GY : %f \t", hmpu1.gyro_data[1]);
+
+	printf("GZ : %f \t\r\n", hmpu1.gyro_data[2]);
+	  
+	printf("AX : %f \t",hmpu1.accel_data[0]);
+
+	printf("AY : %f \t",hmpu1.accel_data[1]);
+
+	printf("AZ : %lf \t\r\n",hmpu1.accel_data[2]);
+	  
+	printf("MX : %lf \t",hmpu1.mag_data[0]); 
+
+	printf("MY : %lf \t",hmpu1.mag_data[1]);
+
+	printf("MZ : %lf \t\r\n",hmpu1.mag_data[2]);		
+
+	HAL_Delay(100);
 	 /*if((HAL_GetTick() - tickstart) >= 200)
 	{
 		HAL_UART_Transmit(&huart3, master_buffer_rx, 10,1);
 		HAL_GPIO_TogglePin(GPIOB,LD2_Pin);
 		tickstart = HAL_GetTick();
 	}*/
-	  
-	  HAL_Delay(300);
-	  
 	  
   /* USER CODE END WHILE */
 
@@ -401,30 +446,16 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-static void writebyte(uint8_t addr, uint8_t data)	//레지스터를 쓰거나 읽는다.
+static void MPU1_Init(void)
 {
-	//-------------------------------------------------------
-	// SPI1 Write_a_byte (addr : 레지스트 주소값  data : 원하는 데이터)  
-	//-------------------------------------------------------\
+	hmpu1.hspi = hspi1;
+	hmpu1.GPIOx = SPI1_NSS_GPIO_Port;
+	hmpu1.GPIO_PIN = SPI1_NSS_Pin;
+	hmpu1.my_low_pass_filter = BITS_DLPF_CFG_188HZ;
+	hmpu1.my_low_pass_filter_acc = BITS_DLPF_CFG_188HZ;
 
-	uint8_t tmp_txbuffer[2] = {addr, data};
-	
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-	
-	HAL_SPI_Transmit(&hspi1, tmp_txbuffer, 2,1);	
-			
-	HAL_SPI_Receive(&hspi1, MPU_data ,2,1);
-
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);	
-	
-	printf(" %d %d\r\n", MPU_data[0], MPU_data[1]);
 }
 
-static void readbyte(uint8_t addr, uint8_t data)
-{
-	uint8_t Read_Flag = 0x80;
-	writebyte(addr | Read_Flag, data);
-}
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
@@ -434,18 +465,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		HAL_SPI_Transmit(&hspi1, IT_master_tx, 2, 1);
 		HAL_SPI_Receive_IT(&hspi1, IT_master_rx,2);*/
 
-	}
-}
-
-void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
-{
-	if(hspi->Instance == hspi1.Instance)
-	{
-		HAL_SPI_TransmitReceive(&hspi1, IT_master_tx, IT_master_rx, 1 ,1);
-		HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-		
-		HAL_UART_Transmit(&huart3, IT_master_rx, 1,2);
-		printf("\r\n");
 	}
 }
 
