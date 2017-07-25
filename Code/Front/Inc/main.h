@@ -44,6 +44,7 @@
 #define TRUE 1
 #define FALSE 0
 
+#define PI	3.14159265358979323846f
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/

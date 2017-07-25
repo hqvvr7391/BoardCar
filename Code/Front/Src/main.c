@@ -42,6 +42,7 @@
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
 #include "MPU9250.h"
+#include "Filters.h"
 
 /* USER CODE END Includes */
 
@@ -55,7 +56,7 @@ UART_HandleTypeDef huart3;
 /* Private variables ---------------------------------------------------------*/
 
 MPU_SelectTypeDef hmpu1;
-//uint8_t response[21];
+
 
 uint8_t c=0x55;
 
@@ -92,6 +93,10 @@ int main(void)
   /* USER CODE BEGIN 1 */
   uint32_t tickstart = 0;
   uint16_t i=0;
+  float * response;
+  float deg;
+  float dt=0.001f;
+  float a = 0.96f;
 	
   /* USER CODE END 1 */
 
@@ -126,76 +131,34 @@ int main(void)
   //HAL_SPI_TransmitReceive_IT(&hspi1, IT_master_tx, IT_master_rx, 1);
     
   printf("Hello \r\n");
-  //MPU9250_deselect(&hmpu1);
+  MPU9250_deselect(&hmpu1);
   
+  MPU9250_init(&hmpu1);
   /* USER CODE END 2 */
-  printf("Press any key to continue \r\n");
 
-	if (MPU9250_whoami(&hmpu1) == 0x71){
-
-		printf("Successful connection \r\n");
-
-	}
-	else{
-
-		printf("Failed connection: ");
-
-		printf("%x \r\n", MPU9250_whoami(&hmpu1));
-	}
-
-
-	if (MPU9250_AK8963_whoami(&hmpu1) == 0x48){
-
-		printf("Successful connection to mag\r\n");
-
-	}
-	else{
-
-		printf("Failed connection to mag: \r\n");
-
-		printf("%x \r\n", MPU9250_AK8963_whoami(&hmpu1));
-
-	}
-	
-	MPU9250_init(&hmpu1);
-
-	printf("Send any char to begin main loop.");
-
-	
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {	  
 	 
+	MPU9250_read_mag(&hmpu1);
 	MPU9250_read_gyro(&hmpu1);
+	MPU9250_read_acc(&hmpu1);
 	  
-	//MPU9250_read_acc(&hmpu1);
+	HAL_Delay(50);
 	  
-	printf("GX : %f \t", hmpu1.gyro_data[0]);
-
-	printf("GY : %f \t", hmpu1.gyro_data[1]);
-
-	printf("GZ : %f \t\r\n", hmpu1.gyro_data[2]);
+	  printf("GX : %4.2f \t", hmpu1.gyro_data[0]);
+	  printf("GY : %4.2f \t", hmpu1.gyro_data[1]);
+	  printf("GZ : %4.2f \t\r\n", hmpu1.gyro_data[2]);
 	  
-	printf("AX : %f \t",hmpu1.accel_data[0]);
-
-	printf("AY : %f \t",hmpu1.accel_data[1]);
-
-	printf("AZ : %lf \t\r\n",hmpu1.accel_data[2]);
+	  printf("AX : %4.2f \t", hmpu1.accel_data[0]);
+	  printf("AY : %4.2f \t", hmpu1.accel_data[1]);
+	  printf("AZ : %4.2f \t\r\n", hmpu1.accel_data[2]);
 	  
-	printf("MX : %lf \t",hmpu1.mag_data[0]); 
-
-	printf("MY : %lf \t",hmpu1.mag_data[1]);
-
-	printf("MZ : %lf \t\r\n",hmpu1.mag_data[2]);		
-
-	HAL_Delay(100);
-	 /*if((HAL_GetTick() - tickstart) >= 200)
-	{
-		HAL_UART_Transmit(&huart3, master_buffer_rx, 10,1);
-		HAL_GPIO_TogglePin(GPIOB,LD2_Pin);
-		tickstart = HAL_GetTick();
-	}*/
+	  printf("MX : %4.2f \t", hmpu1.mag_data[0]);
+	  printf("MY : %4.2f \t", hmpu1.mag_data[1]);
+	  printf("MZ : %4.2f \t\r\n", hmpu1.mag_data[2]);
+	
 	  
   /* USER CODE END WHILE */
 

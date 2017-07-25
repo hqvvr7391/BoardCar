@@ -10,7 +10,7 @@
  * Modified for STM32F7xx.h HAL Driver
  */
 
-#include "stm32f7xx.h"
+//#include "stm32f7xx.h"
 #include "MPU9250.h"
 
 uint8_t MPU9250_WriteReg(MPU_SelectTypeDef *hmpu, uint8_t WriteAddr, uint8_t WriteData )
@@ -50,13 +50,15 @@ void MPU9250_ReadRegs(MPU_SelectTypeDef *hmpu, uint8_t ReadAddr, uint8_t *ReadBu
 	for(i = 1; i < Bytes; i++) temp_buffer[i] = temp_buffer[0] + i;
 	
 	MPU9250_select(hmpu);
+	
 	for(i=0;i<Bytes;i++){
 		HAL_SPI_Transmit(&hmpu->hspi, &temp_buffer[i], 1, 1);
 		HAL_SPI_Receive(&hmpu->hspi, &ReadBuf[i], 1, 1);
 	}
+	
 	MPU9250_deselect(hmpu);
 	
-	//delayMicroseconds(50);
+	//HAL_Delay(5);
 }
 
 
@@ -77,8 +79,6 @@ void MPU9250_ReadRegs(MPU_SelectTypeDef *hmpu, uint8_t ReadAddr, uint8_t *ReadBu
 #define MPU_InitRegNum 17
 
 int MPU9250_init(MPU_SelectTypeDef *hmpu){
-
-	float temp[3];
 
 	MPU9250_calibrate(hmpu, hmpu->g_bias, hmpu->a_bias);
 
@@ -234,7 +234,7 @@ unsigned int MPU9250_whoami(MPU_SelectTypeDef *hmpu){
 
 void MPU9250_read_acc(MPU_SelectTypeDef *hmpu)
 {
-    uint8_t response[6];
+    uint8_t response[7];
     int16_t bit_data;
     float data;
     int i;
@@ -303,7 +303,7 @@ void MPU9250_calib_acc(MPU_SelectTypeDef *hmpu)
 	//ENABLE SELF TEST need modify
 	//temp_scale=MPU9250_WriteReg(MPUREG_ACCEL_CONFIG, 0x80>>axis);
 
-	MPU9250_ReadRegs(hmpu, MPUREG_SELF_TEST_X_A,response,4);
+	MPU9250_ReadRegs(hmpu, MPUREG_SELF_TEST_X_A,response,3);
 	hmpu->calib_data[0] = ((response[0]&11100000)>>3) | ((response[3]&00110000)>>4);
 	hmpu->calib_data[1] = ((response[1]&11100000)>>3) | ((response[3]&00001100)>>2);
 	hmpu->calib_data[2] = ((response[2]&11100000)>>3) | ((response[3]&00000011));
@@ -588,7 +588,131 @@ void MPU9250_deselect(MPU_SelectTypeDef *hmpu) {
 	HAL_GPIO_WritePin(hmpu->GPIOx, hmpu->GPIO_PIN, GPIO_PIN_SET);
 }
 
-int MPU9250_test(MPU_SelectTypeDef *hmpu)
+
+
+
+void MPU9250_SelfTest(MPU_SelectTypeDef *hmpu, float *destination)
 {
-	return 0x81;
+
+	uint8_t rawData[6] = {0, 0, 0, 0, 0, 0};
+	uint8_t selfTest[6];
+	int32_t gAvg[3] = {0}, aAvg[3] = {0}, aSTAvg[3] = {0}, gSTAvg[3] = {0};
+	float factoryTrim[6];
+	uint8_t FS = 0;
+	int ii;
+
+	MPU9250_WriteReg(hmpu, MPUREG_SMPLRT_DIV, 0x00);	// Set gyro sample rate to 1 kHz
+	MPU9250_WriteReg(hmpu, MPUREG_CONFIG, 0x02);		// Set gyro sample rate to 1 kHz and DLPF to 92 Hz
+	MPU9250_WriteReg(hmpu, MPUREG_GYRO_CONFIG, 1<<FS);	// Set full scale range for the gyro to 250 dps
+	MPU9250_WriteReg(hmpu,  MPUREG_ACCEL_CONFIG_2, 0x02);	// Set accelerometer rate to 1 kHz and bandwidth to 92 Hz
+	MPU9250_WriteReg(hmpu,  MPUREG_ACCEL_CONFIG, 1<<FS);	// Set full scale range for the accelerometer to 2 g
+	
+	// Get average current values of gyro and acclerometer
+
+	for (ii = 0; ii < 200; ii++)
+	{
+	// Read the six raw data registers into data array
+
+		MPU9250_ReadRegs(hmpu,  MPUREG_ACCEL_XOUT_H, rawData, 6);
+
+		aAvg[0] += (int16_t)(((int16_t)rawData[0] << 8) | rawData[1]) ;	// Turn the MSB and LSB into a signed 16-bit value
+		aAvg[1] += (int16_t)(((int16_t)rawData[2] << 8) | rawData[3]) ;
+		aAvg[2] += (int16_t)(((int16_t)rawData[4] << 8) | rawData[5]) ;
+		
+		MPU9250_ReadRegs(hmpu,  MPUREG_GYRO_XOUT_H, rawData, 6);			// Read the six raw data registers sequentially into data array
+
+		gAvg[0] += (int16_t)(((int16_t)rawData[0] << 8) | rawData[1]) ;	// Turn the MSB and LSB into a signed 16-bit value
+		gAvg[1] += (int16_t)(((int16_t)rawData[2] << 8) | rawData[3]) ;
+		gAvg[2] += (int16_t)(((int16_t)rawData[4] << 8) | rawData[5]) ;
+	  }
+
+
+
+  // Get average of 200 values and store as average current readings
+
+	for (int ii =0; ii < 3; ii++)
+	{
+		aAvg[ii] /= 200;
+		gAvg[ii] /= 200;
+	}
+
+	// Configure the accelerometer for self-test
+
+	MPU9250_WriteReg(hmpu, MPUREG_ACCEL_CONFIG, 0xE0);		// Enable self test on all three axes and set accelerometer range to +/- 2 g
+	MPU9250_WriteReg(hmpu, MPUREG_GYRO_CONFIG,  0xE0);		// Enable self test on all three axes and set gyro range to +/- 250 degrees/s
+	
+	HAL_Delay(25);  // Delay a while to let the device stabilize
+	// Get average self-test values of gyro and acclerometer
+
+	for (int ii = 0; ii < 200; ii++)
+
+	{
+		MPU9250_ReadRegs(hmpu, MPUREG_ACCEL_XOUT_H, rawData, 6);		// Read the six raw data registers into data array
+
+		aSTAvg[0] += (int16_t)(((int16_t)rawData[0] << 8) | rawData[1]) ; 			// Turn the MSB and LSB into a signed 16-bit value
+		aSTAvg[1] += (int16_t)(((int16_t)rawData[2] << 8) | rawData[3]) ;
+		aSTAvg[2] += (int16_t)(((int16_t)rawData[4] << 8) | rawData[5]) ;
+
+		MPU9250_ReadRegs(hmpu, MPUREG_GYRO_XOUT_H, rawData, 6);			// Read the six raw data registers sequentially into data array
+
+		gSTAvg[0] += (int16_t)(((int16_t)rawData[0] << 8) | rawData[1]) ;			// Turn the MSB and LSB into a signed 16-bit value
+		gSTAvg[1] += (int16_t)(((int16_t)rawData[2] << 8) | rawData[3]) ;
+		gSTAvg[2] += (int16_t)(((int16_t)rawData[4] << 8) | rawData[5]) ;
+	}
+
+	for (int ii =0; ii < 3; ii++)		// Get average of 200 values and store as average self-test readings
+	{
+		aSTAvg[ii] /= 200;
+		gSTAvg[ii] /= 200;
+	}
+
+	MPU9250_WriteReg(hmpu, MPUREG_ACCEL_CONFIG, 0x00);		// Configure the gyro and accelerometer for normal operation
+	MPU9250_WriteReg(hmpu, MPUREG_GYRO_CONFIG,  0x00);
+
+	HAL_Delay(25);  // Delay a while to let the device stabilize
+
+
+
+	// Retrieve accelerometer and gyro factory Self-Test Code from USR_Reg
+
+	selfTest[0] = MPU9250_ReadReg(hmpu, MPUREG_SELF_TEST_X_A);	// X-axis accel self-test results
+	selfTest[1] = MPU9250_ReadReg(hmpu, MPUREG_SELF_TEST_Y_A);	// Y-axis accel self-test results
+	selfTest[2] = MPU9250_ReadReg(hmpu, MPUREG_SELF_TEST_Z_A);	// Z-axis accel self-test results
+
+	selfTest[3] = MPU9250_ReadReg(hmpu, MPUREG_SELF_TEST_X_G);	// X-axis gyro self-test results
+	selfTest[4] = MPU9250_ReadReg(hmpu, MPUREG_SELF_TEST_Y_G);	// Y-axis gyro self-test results
+	selfTest[5] = MPU9250_ReadReg(hmpu, MPUREG_SELF_TEST_Z_G);	// Z-axis gyro self-test results
+
+
+
+	// Retrieve factory self-test value from self-test code reads
+
+	
+
+	factoryTrim[0] = (float)(2620/1<<FS)*(pow(1.01 ,((float)selfTest[0] - 1.0) ));	// FT[Xa] factory trim calculation
+	factoryTrim[1] = (float)(2620/1<<FS)*(pow(1.01 ,((float)selfTest[1] - 1.0) ));	// FT[Ya] factory trim calculation
+	factoryTrim[2] = (float)(2620/1<<FS)*(pow(1.01 ,((float)selfTest[2] - 1.0) ));	// FT[Za] factory trim calculation
+
+	factoryTrim[3] = (float)(2620/1<<FS)*(pow(1.01 ,((float)selfTest[3] - 1.0) ));	// FT[Xg] factory trim calculation
+	factoryTrim[4] = (float)(2620/1<<FS)*(pow(1.01 ,((float)selfTest[4] - 1.0) ));	// FT[Yg] factory trim calculation
+	factoryTrim[5] = (float)(2620/1<<FS)*(pow(1.01 ,((float)selfTest[5] - 1.0) ));	// FT[Zg] factory trim calculation
+
+
+
+	// Report results as a ratio of (STR - FT)/FT; the change from Factory Trim
+
+	// of the Self-Test Response
+
+	// To get percent, must multiply by 100
+
+	for (int i = 0; i < 3; i++)
+	{
+		// Report percent differences
+		destination[i] = 100.0 * ((float)(aSTAvg[i] - aAvg[i])) / factoryTrim[i] - 100.;
+
+		// Report percent differences
+		destination[i+3] = 100.0*((float)(gSTAvg[i] - gAvg[i]))/factoryTrim[i+3] - 100.;
+	}
+
 }
+

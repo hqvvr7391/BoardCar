@@ -13,6 +13,7 @@
 #ifndef MPU9250_h
 #define MPU9250_h
 #include "stm32f7xx_hal.h"
+#include "math.h"
 
 // #define AK8963FASTMODE
 
@@ -436,6 +437,8 @@ void MPU9250_read_all(MPU_SelectTypeDef *hmpu);
 void MPU9250_calibrate(MPU_SelectTypeDef *hmpu, float *dest1, float *dest2);
 
 
+void MPU9250_SelfTest(MPU_SelectTypeDef *hmpu, float *destination);
+void MPU9250_IN(MPU_SelectTypeDef *hmpu);
 
 
  
