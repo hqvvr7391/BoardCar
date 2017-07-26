@@ -210,13 +210,9 @@ float *MahonyQuaternionUpdate(float ax, float ay, float az, float gx, float gy, 
 	if (Ki > 0.0f)
 
 	{
-
 		eInt[0] += ex;      // accumulate integral error
-
 		eInt[1] += ey;
-
 		eInt[2] += ez;
-
 	}
 
 	else
@@ -224,21 +220,15 @@ float *MahonyQuaternionUpdate(float ax, float ay, float az, float gx, float gy, 
 	{
 
 		eInt[0] = 0.0f;     // prevent integral wind up
-
 		eInt[1] = 0.0f;
-
 		eInt[2] = 0.0f;
 
 	}
 
-
-
 	// Apply feedback terms
 
 	gx = gx + Kp * ex + Ki * eInt[0];
-
 	gy = gy + Kp * ey + Ki * eInt[1];
-
 	gz = gz + Kp * ez + Ki * eInt[2];
 
 
@@ -246,17 +236,12 @@ float *MahonyQuaternionUpdate(float ax, float ay, float az, float gx, float gy, 
 	// Integrate rate of change of quaternion
 
 	pa = q2;
-
 	pb = q3;
-
 	pc = q4;
 
 	q1 = q1 + (-q2 * gx - q3 * gy - q4 * gz) * (0.5f * delta_t);
-
 	q2 = pa + (q1 * gx + pb * gz - pc * gy) * (0.5f * delta_t);
-
 	q3 = pb + (q1 * gy - pa * gz + pc * gx) * (0.5f * delta_t);
-
 	q4 = pc + (q1 * gz + pa * gy - pb * gx) * (0.5f * delta_t);
 
 
@@ -264,15 +249,11 @@ float *MahonyQuaternionUpdate(float ax, float ay, float az, float gx, float gy, 
 	// Normalise quaternion
 
 	norm = sqrtf(q1 * q1 + q2 * q2 + q3 * q3 + q4 * q4);
-
 	norm = 1.0f / norm;
-
+	
 	q[0] = q1 * norm;
-
 	q[1] = q2 * norm;
-
 	q[2] = q3 * norm;
-
 	q[3] = q4 * norm;
 
 	return q;

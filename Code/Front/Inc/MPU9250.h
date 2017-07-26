@@ -12,6 +12,7 @@
 
 #ifndef MPU9250_h
 #define MPU9250_h
+#include"stdlib.h"
 #include "stm32f7xx_hal.h"
 #include "math.h"
 

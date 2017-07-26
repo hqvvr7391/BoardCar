@@ -93,7 +93,8 @@ int main(void)
   /* USER CODE BEGIN 1 */
   uint32_t tickstart = 0;
   uint16_t i=0;
-  float * response;
+  float response[6];
+  uint8_t _response[6];
   float deg;
   float dt=0.001f;
   float a = 0.96f;
@@ -130,10 +131,18 @@ int main(void)
   HAL_UART_Receive_IT(&huart3, &c, 1);
   //HAL_SPI_TransmitReceive_IT(&hspi1, IT_master_tx, IT_master_rx, 1);
     
-  printf("Hello \r\n");
+  printf("\nHello \r\n");
   MPU9250_deselect(&hmpu1);
   
   MPU9250_init(&hmpu1);
+  
+  MPU9250_SelfTest(&hmpu1, response);
+  
+  for(i=0;i<6;i++)
+  {
+	  printf("%lf \r\n", response[i]);
+  }
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -145,7 +154,7 @@ int main(void)
 	MPU9250_read_gyro(&hmpu1);
 	MPU9250_read_acc(&hmpu1);
 	  
-	HAL_Delay(50);
+	HAL_Delay(200);
 	  
 	  printf("GX : %4.2f \t", hmpu1.gyro_data[0]);
 	  printf("GY : %4.2f \t", hmpu1.gyro_data[1]);
@@ -158,7 +167,9 @@ int main(void)
 	  printf("MX : %4.2f \t", hmpu1.mag_data[0]);
 	  printf("MY : %4.2f \t", hmpu1.mag_data[1]);
 	  printf("MZ : %4.2f \t\r\n", hmpu1.mag_data[2]);
-	
+	  
+	  printf("\r\n \r\n");
+	  
 	  
   /* USER CODE END WHILE */
 
@@ -186,14 +197,13 @@ void SystemClock_Config(void)
 
     /**Initializes the CPU, AHB and APB busses clocks 
     */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = 16;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 96;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV6;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 25;
+  RCC_OscInitStruct.PLL.PLLN = 256;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -206,10 +216,10 @@ void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -244,7 +254,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
   hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
