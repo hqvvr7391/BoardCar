@@ -30,7 +30,7 @@
 #define Ki 0.0f
 
 
-
+float Complemetary(float C_alpha, float a, float b);
 float *MadgwickQuaternionUpdate(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz);
 float *MahonyQuaternionUpdate(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz);
 	

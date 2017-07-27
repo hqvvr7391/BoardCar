@@ -4,6 +4,12 @@
 float q[4] = {1.0f, 0.0f, 0.0f, 0.0f};	// vector to hold quaternion
 float eInt[3] = {0.0f, 0.0f, 0.0f};              // vector to hold integral error for Mahony method
 
+
+float Complemetary(float C_alpha, float a, float b)
+{
+	return (C_alpha * a + (1.0f - C_alpha) * b);
+}
+	
 float *MadgwickQuaternionUpdate(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz)
 {
 

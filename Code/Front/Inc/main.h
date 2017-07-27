@@ -45,6 +45,7 @@
 #define FALSE 0
 
 #define PI	3.14159265358979323846f
+#define C_Alpha 0.98f
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/

@@ -335,7 +335,7 @@
               <MiscControls>--C99</MiscControls>
               <Define>USE_HAL_DRIVER,STM32F767xx</Define>
               <Undefine />
-              <IncludePath>../Inc;                                        ../Drivers/STM32F7xx_HAL_Driver/Inc;                                        ../Drivers/STM32F7xx_HAL_Driver/Inc/Legacy;                                        ../Drivers/CMSIS/Device/ST/STM32F7xx/Include;                                        ../Drivers/CMSIS/Include</IncludePath>
+              <IncludePath>../Inc;                                              ../Drivers/STM32F7xx_HAL_Driver/Inc;                                              ../Drivers/STM32F7xx_HAL_Driver/Inc/Legacy;                                              ../Drivers/CMSIS/Device/ST/STM32F7xx/Include;                                              ../Drivers/CMSIS/Include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -498,6 +498,11 @@
               <FileName>MPU9250.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Inc\MPU9250.c</FilePath>
+            </File>
+            <File>
+              <FileName>Filters.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Inc\Filters.c</FilePath>
             </File>
           </Files>
         </Group>

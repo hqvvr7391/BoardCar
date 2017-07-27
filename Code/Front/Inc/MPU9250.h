@@ -26,6 +26,11 @@ typedef struct
 
 	uint8_t 			GPIO_PIN;
 	
+	uint8_t my_low_pass_filter;
+	uint8_t my_low_pass_filter_acc;
+	
+	float dt;
+	
 	float acc_divider;
 	float gyro_divider;
 
@@ -36,17 +41,21 @@ typedef struct
 	float temperature;
 	float gyro_data[3];
 	float mag_data[3];
-	int16_t mag_data_raw[3];    
+	int16_t mag_data_raw[3];
 
-	long my_clock;
-	uint8_t my_cs;
-	uint8_t my_low_pass_filter;
-	uint8_t my_low_pass_filter_acc;
+
 
 	//float randomstuffs[3];
 
 	float g_bias[3];
 	float a_bias[3];      // Bias corrections for gyro and accelerometer
+	
+	float unfiltered_data[6];
+	
+	float angle[3];
+	
+	uint8_t register_map[127];
+
 
 } MPU_SelectTypeDef;
 
@@ -416,9 +425,10 @@ typedef struct
         my_low_pass_filter_acc = low_pass_filter_acc;
     }*/
 
-uint8_t MPU9250_WriteReg(MPU_SelectTypeDef *hmpu, uint8_t WriteAddr, uint8_t WriteData );
+
 uint8_t MPU9250_ReadReg(MPU_SelectTypeDef *hmpu, uint8_t WriteAddr);
 void MPU9250_ReadRegs(MPU_SelectTypeDef *hmpu, uint8_t ReadAddr, uint8_t *ReadBuf, unsigned int Bytes );
+void MPU9250_WriteReg(MPU_SelectTypeDef *hmpu, uint8_t WriteAddr, uint8_t WriteData );
 
 int MPU9250_init(MPU_SelectTypeDef *hmpu);
 void MPU9250_read_temp(MPU_SelectTypeDef *hmpu);
@@ -437,9 +447,8 @@ void MPU9250_read_mag(MPU_SelectTypeDef *hmpu);
 void MPU9250_read_all(MPU_SelectTypeDef *hmpu);
 void MPU9250_calibrate(MPU_SelectTypeDef *hmpu, float *dest1, float *dest2);
 
-
 void MPU9250_SelfTest(MPU_SelectTypeDef *hmpu, float *destination);
 void MPU9250_IN(MPU_SelectTypeDef *hmpu);
+void MPU9250_calcangle(MPU_SelectTypeDef *hmpu);
 
-
- 
+ void MPU9250_read_allReg(MPU_SelectTypeDef *hmpu);

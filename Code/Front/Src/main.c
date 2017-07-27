@@ -50,6 +50,8 @@
 
 SPI_HandleTypeDef hspi1;
 
+TIM_HandleTypeDef htim2;
+
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
@@ -68,6 +70,10 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_TIM2_Init(void);
+
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+                                
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -93,7 +99,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
   uint32_t tickstart = 0;
   uint16_t i=0;
-  float response[6];
+  float response[6] = {0,0,0,0,0,0};
   uint8_t _response[6];
   float deg;
   float dt=0.001f;
@@ -122,26 +128,36 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_SPI1_Init();
+  MX_TIM2_Init();
 
   /* USER CODE BEGIN 2 */
+  /* Initialize all user configured peripherals */
   MPU1_Init();
+  
+  
+  /* Initialize all user configured interrupts */
+  //HAL_TIM_Base_Start_IT(&htim2);
+  HAL_UART_Receive_IT(&huart3, &c, 1);
+  //HAL_SPI_TransmitReceive_IT(&hspi1, IT_master_tx, IT_master_rx, 1);
+  
+  
+  /* user code begin */
   
   tickstart = HAL_GetTick();
 
-  HAL_UART_Receive_IT(&huart3, &c, 1);
-  //HAL_SPI_TransmitReceive_IT(&hspi1, IT_master_tx, IT_master_rx, 1);
+
     
   printf("\nHello \r\n");
   MPU9250_deselect(&hmpu1);
+
   
   MPU9250_init(&hmpu1);
   
-  MPU9250_SelfTest(&hmpu1, response);
   
-  for(i=0;i<6;i++)
-  {
-	  printf("%lf \r\n", response[i]);
-  }
+  
+
+  
+ MPU9250_read_allReg(&hmpu1);
   
   /* USER CODE END 2 */
 
@@ -149,26 +165,41 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {	  
-	 
-	MPU9250_read_mag(&hmpu1);
+	  /*MPU9250_calcangle(&hmpu1);
+	  hmpu1.angle[0] = Complemetary(C_Alpha, hmpu1.unfiltered_data[0], hmpu1.unfiltered_data[3]);
+	  hmpu1.angle[1] = Complemetary(C_Alpha, hmpu1.unfiltered_data[1], hmpu1.unfiltered_data[4]);
+	  hmpu1.angle[2] = Complemetary(C_Alpha, hmpu1.unfiltered_data[2], hmpu1.unfiltered_data[5]);
+	  
+	  for(i=0; i<3; i++) {
+		  printf("%lf \t", hmpu1.unfiltered_data[i]);
+	  }
+	  printf("\r\n");*/
+	  
+	  
+	MPU9250_read_all(&hmpu1);
+
+	/*MPU9250_read_acc(&hmpu1);
 	MPU9250_read_gyro(&hmpu1);
-	MPU9250_read_acc(&hmpu1);
-	  
-	HAL_Delay(200);
-	  
-	  printf("GX : %4.2f \t", hmpu1.gyro_data[0]);
-	  printf("GY : %4.2f \t", hmpu1.gyro_data[1]);
-	  printf("GZ : %4.2f \t\r\n", hmpu1.gyro_data[2]);
-	  
-	  printf("AX : %4.2f \t", hmpu1.accel_data[0]);
-	  printf("AY : %4.2f \t", hmpu1.accel_data[1]);
-	  printf("AZ : %4.2f \t\r\n", hmpu1.accel_data[2]);
-	  
-	  printf("MX : %4.2f \t", hmpu1.mag_data[0]);
-	  printf("MY : %4.2f \t", hmpu1.mag_data[1]);
-	  printf("MZ : %4.2f \t\r\n", hmpu1.mag_data[2]);
-	  
-	  printf("\r\n \r\n");
+	MPU9250_read_mag(&hmpu1);*/
+
+
+	printf("GX : %4.4f \t", hmpu1.gyro_data[0]);
+	printf("GY : %4.4f \t", hmpu1.gyro_data[1]);
+	printf("GZ : %4.4f \t\r\n", hmpu1.gyro_data[2]);
+
+
+	printf("AX : %4.4f \t", hmpu1.accel_data[0]);
+	printf("AY : %4.4f \t", hmpu1.accel_data[1]);
+	printf("AZ : %4.4f \t\r\n", hmpu1.accel_data[2]);
+
+	printf("MX : %4.4f \t", hmpu1.mag_data[0]);
+	printf("MY : %4.4f \t", hmpu1.mag_data[1]);
+	printf("MZ : %4.4f \t\r\n", hmpu1.mag_data[2]);
+
+	printf("\r\n \r\n");	
+	
+
+	HAL_Delay(100);
 	  
 	  
   /* USER CODE END WHILE */
@@ -265,6 +296,56 @@ static void MX_SPI1_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
+
+}
+
+/* TIM2 init function */
+static void MX_TIM2_Init(void)
+{
+
+  TIM_ClockConfigTypeDef sClockSourceConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+  TIM_OC_InitTypeDef sConfigOC;
+
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 0;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 1;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_ENABLE;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  HAL_TIM_MspPostInit(&htim2);
 
 }
 
@@ -369,12 +450,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
   HAL_GPIO_Init(RMII_TXD1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LD3_Pin LD2_Pin */
-  GPIO_InitStruct.Pin = LD3_Pin|LD2_Pin;
+  /*Configure GPIO pin : LD3_Pin */
+  GPIO_InitStruct.Pin = LD3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(LD3_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : USB_PowerSwitchOn_Pin */
   GPIO_InitStruct.Pin = USB_PowerSwitchOn_Pin;
@@ -411,6 +492,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : LD2_Pin */
+  GPIO_InitStruct.Pin = LD2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
@@ -426,7 +514,11 @@ static void MPU1_Init(void)
 	hmpu1.GPIO_PIN = SPI1_NSS_Pin;
 	hmpu1.my_low_pass_filter = BITS_DLPF_CFG_188HZ;
 	hmpu1.my_low_pass_filter_acc = BITS_DLPF_CFG_188HZ;
-
+	
+	hmpu1.dt = 0.01f;
+	hmpu1.angle[0] = 0;
+	hmpu1.angle[1] = 0;
+	hmpu1.angle[2] = 0;
 }
 
 
@@ -445,9 +537,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(HAL_GPIO_ReadPin(USER_Btn_GPIO_Port, USER_Btn_Pin))
 	{
+		
 	}
 	
 }
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	HAL_GPIO_TogglePin(GPIOB, LD2_Pin);
+}
+
 	
 /* USER CODE END 4 */
 

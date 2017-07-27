@@ -11,20 +11,7 @@
  */
 
 #include "MPU9250.h"
-
-uint8_t MPU9250_WriteReg(MPU_SelectTypeDef *hmpu, uint8_t WriteAddr, uint8_t WriteData )
-{
-	uint8_t temp_buffer[2] = {WriteAddr, WriteData};
-	uint8_t temp_val[2];
-
-	MPU9250_select(hmpu);
-	HAL_SPI_Transmit(&(hmpu->hspi), temp_buffer, 2, 1);
-	HAL_SPI_Receive(&(hmpu->hspi), temp_val, 2, 1);
-	MPU9250_deselect(hmpu);
-
-	//HAL_Delay(50);
-	return temp_val[0];
-}
+#include "Filters.h"
 
 uint8_t  MPU9250_ReadReg(MPU_SelectTypeDef *hmpu, uint8_t WriteAddr)
 {
@@ -36,6 +23,7 @@ uint8_t  MPU9250_ReadReg(MPU_SelectTypeDef *hmpu, uint8_t WriteAddr)
 	HAL_SPI_Transmit(&(hmpu->hspi), &temp_buffer, 1, 1);
 	HAL_SPI_Receive(&(hmpu->hspi), &temp_val, 1, 1);
 	MPU9250_deselect(hmpu);
+
 
 	//HAL_Delay(50);
 	return temp_val;
@@ -54,6 +42,19 @@ void MPU9250_ReadRegs(MPU_SelectTypeDef *hmpu, uint8_t ReadAddr, uint8_t *ReadBu
 	//HAL_Delay(5);
 }
 
+void MPU9250_WriteReg(MPU_SelectTypeDef *hmpu, uint8_t WriteAddr, uint8_t WriteData )
+{
+	uint8_t temp_buffer[2] = {WriteAddr, WriteData};
+	uint8_t temp_val[2];
+
+	MPU9250_select(hmpu);
+	HAL_SPI_Transmit(&(hmpu->hspi), temp_buffer, 2, 1);
+	HAL_SPI_Receive(&(hmpu->hspi), temp_val, 2, 1);
+	MPU9250_deselect(hmpu);
+
+	
+	//HAL_Delay(50);
+}
 
 /*                                     INITIALIZATION
  * usage: call this function at startup, giving the sample rate divider (raging from 0 to 255) and
@@ -405,7 +406,7 @@ void MPU9250_read_all(MPU_SelectTypeDef *hmpu){
 	MPU9250_ReadRegs(hmpu,MPUREG_ACCEL_XOUT_H,response,21);
 	// Get accelerometer value
 	for(i = 0; i < 3; i++) {
-		bit_data = ((int16_t)response[i*2]<<8) | response[i*2+1];
+		bit_data = ((int16_t)response[i*2]<<8)|response[i*2+1];
 		data = (float)bit_data;
 		hmpu->accel_data[i] = data/hmpu->acc_divider;// - hmpu->a_bias[i];
 	}
@@ -594,10 +595,11 @@ void MPU9250_SelfTest(MPU_SelectTypeDef *hmpu, float *destination)
 {
 
 	uint8_t rawData[6] = {0, 0, 0, 0, 0, 0};
-	uint8_t selfTest[6];
+	uint8_t self_Test[6] = {0, 0, 0, 0, 0, 0};
 	int32_t gAvg[3] = {0}, aAvg[3] = {0}, aSTAvg[3] = {0}, gSTAvg[3] = {0};
 	float factoryTrim[6];
 	uint8_t FS = 0;
+	float destinatio[6];
 	int ii;
 
 	MPU9250_WriteReg(hmpu, MPUREG_SMPLRT_DIV, 0x00);	// Set gyro sample rate to 1 kHz
@@ -668,36 +670,37 @@ void MPU9250_SelfTest(MPU_SelectTypeDef *hmpu, float *destination)
 	MPU9250_WriteReg(hmpu, MPUREG_ACCEL_CONFIG, 0x00);		// Configure the gyro and accelerometer for normal operation
 	MPU9250_WriteReg(hmpu, MPUREG_GYRO_CONFIG,  0x00);
 
-	HAL_Delay(25);  // Delay a while to let the device stabilize
-
-
+	HAL_Delay(50);  // Delay a while to let the device stabilize
 
 	// Retrieve accelerometer and gyro factory Self-Test Code from USR_Reg
+	/*
+	self_Test[0] = MPU9250_ReadReg(hmpu, MPUREG_SELF_TEST_X_A);	// X-axis accel self-test results
+	self_Test[1] = MPU9250_ReadReg(hmpu, MPUREG_SELF_TEST_Y_A);	// Y-axis accel self-test results
+	self_Test[2] = MPU9250_ReadReg(hmpu, MPUREG_SELF_TEST_Z_A);	// Z-axis accel self-test results
 
-	selfTest[0] = MPU9250_ReadReg(hmpu, MPUREG_SELF_TEST_X_A);	// X-axis accel self-test results
-	selfTest[1] = MPU9250_ReadReg(hmpu, MPUREG_SELF_TEST_Y_A);	// Y-axis accel self-test results
-	selfTest[2] = MPU9250_ReadReg(hmpu, MPUREG_SELF_TEST_Z_A);	// Z-axis accel self-test results
-
-	selfTest[3] = MPU9250_ReadReg(hmpu, MPUREG_SELF_TEST_X_G);	// X-axis gyro self-test results
-	selfTest[4] = MPU9250_ReadReg(hmpu, MPUREG_SELF_TEST_Y_G);	// Y-axis gyro self-test results
-	selfTest[5] = MPU9250_ReadReg(hmpu, MPUREG_SELF_TEST_Z_G);	// Z-axis gyro self-test results
-
-
+	self_Test[3] = MPU9250_ReadReg(hmpu, MPUREG_SELF_TEST_X_G);	// X-axis gyro self-test results
+	self_Test[4] = MPU9250_ReadReg(hmpu, MPUREG_SELF_TEST_Y_G);	// Y-axis gyro self-test results
+	self_Test[5] = MPU9250_ReadReg(hmpu, MPUREG_SELF_TEST_Z_G);	// Z-axis gyro self-test results
 
 	// Retrieve factory self-test value from self-test code reads
 
+	factoryTrim[0] = (float)(2620/1<<FS)*(pow(1.01f ,((float)self_Test[0] - 1.0f) ));	// FT[Xa] factory trim calculation
+	factoryTrim[1] = (float)(2620/1<<FS)*(pow(1.01f ,((float)self_Test[1] - 1.0f) ));	// FT[Ya] factory trim calculation
+	factoryTrim[2] = (float)(2620/1<<FS)*(pow(1.01f ,((float)self_Test[2] - 1.0f) ));	// FT[Za] factory trim calculation
+
+	factoryTrim[3] = (float)(2620/1<<FS)*(pow(1.01f ,((float)self_Test[3] - 1.0f) ));	// FT[Xg] factory trim calculation
+	factoryTrim[4] = (float)(2620/1<<FS)*(pow(1.01f ,((float)self_Test[4] - 1.0f) ));	// FT[Yg] factory trim calculation
+	factoryTrim[5] = (float)(2620/1<<FS)*(pow(1.01f ,((float)self_Test[5] - 1.0f) ));	// FT[Zg] factory trim calculation*/
 	
-
-	factoryTrim[0] = (float)(2620/1<<FS)*(pow(1.01 ,((float)selfTest[0] - 1.0) ));	// FT[Xa] factory trim calculation
-	factoryTrim[1] = (float)(2620/1<<FS)*(pow(1.01 ,((float)selfTest[1] - 1.0) ));	// FT[Ya] factory trim calculation
-	factoryTrim[2] = (float)(2620/1<<FS)*(pow(1.01 ,((float)selfTest[2] - 1.0) ));	// FT[Za] factory trim calculation
-
-	factoryTrim[3] = (float)(2620/1<<FS)*(pow(1.01 ,((float)selfTest[3] - 1.0) ));	// FT[Xg] factory trim calculation
-	factoryTrim[4] = (float)(2620/1<<FS)*(pow(1.01 ,((float)selfTest[4] - 1.0) ));	// FT[Yg] factory trim calculation
-	factoryTrim[5] = (float)(2620/1<<FS)*(pow(1.01 ,((float)selfTest[5] - 1.0) ));	// FT[Zg] factory trim calculation
-
-
-
+	MPU9250_ReadRegs(hmpu, MPUREG_SELF_TEST_X_A, self_Test,6);
+	
+	for(ii=0; ii<6; ii++)
+	{
+		factoryTrim[ii] = (float)(2620/1<<FS)*(pow(1.01f ,((float)self_Test[ii] - 1.0f) ));
+	}
+		
+	
+	
 	// Report results as a ratio of (STR - FT)/FT; the change from Factory Trim
 
 	// of the Self-Test Response
@@ -707,11 +710,51 @@ void MPU9250_SelfTest(MPU_SelectTypeDef *hmpu, float *destination)
 	for (int i = 0; i < 3; i++)
 	{
 		// Report percent differences
-		destination[i] = 100.0 * ((float)(aSTAvg[i] - aAvg[i])) / factoryTrim[i] - 100.;
+		destinatio[i] = 100.0f * (((float)(aSTAvg[i] - aAvg[i])) / factoryTrim[i]);
 
 		// Report percent differences
-		destination[i+3] = 100.0*((float)(gSTAvg[i] - gAvg[i]))/factoryTrim[i+3] - 100.;
+		destinatio[i+3] = 100.0f*(((float)(gSTAvg[i] - gAvg[i]))/factoryTrim[i+3])-100.f;
 	}
 
 }
 
+void MPU9250_calcangle(MPU_SelectTypeDef *hmpu)
+{
+	float ax, ay, az, mx, my, mz;
+	
+	MPU9250_read_all(hmpu);
+	
+	//if((hmpu->angle[0] == 0) && (hmpu->angle[1] == 0) && (hmpu->angle[2] == 0))
+
+	// Compute the (filtered) gyro angles
+	
+	hmpu->unfiltered_data[0] += hmpu->gyro_data[0]*hmpu->dt;
+	hmpu->unfiltered_data[1] += hmpu->gyro_data[1]*hmpu->dt;
+	hmpu->unfiltered_data[2] += hmpu->gyro_data[2]*hmpu->dt;
+
+	// Compute the drifting gyro angles
+
+	  ax = hmpu->accel_data[0];
+	  ay = hmpu->accel_data[1];
+	  az = hmpu->accel_data[2];
+
+	// Get angle values from accelerometer
+	  float RADIANS_TO_DEGREES = 180 / 3.14159;
+	  
+	// ?  accel_vector_length = sqrt(pow(ax,2) + pow(ay,2) + pow(az,2));
+	
+	hmpu->unfiltered_data[3]  = atan(ay/az)*RADIANS_TO_DEGREES;
+	hmpu->unfiltered_data[4]  = atan(ax / az)*RADIANS_TO_DEGREES;
+	hmpu->unfiltered_data[5]  = atan(sqrt(pow(ax,2) + pow(ay,2))/az);
+	
+	
+	hmpu->angle[0] = Complemetary(C_Alpha, hmpu->unfiltered_data[0], hmpu->unfiltered_data[3]);
+	hmpu->angle[1] = Complemetary(C_Alpha, hmpu->unfiltered_data[1], hmpu->unfiltered_data[4]);
+	hmpu->angle[2] = Complemetary(C_Alpha, hmpu->unfiltered_data[2], hmpu->unfiltered_data[5]);
+}
+
+void MPU9250_read_allReg(MPU_SelectTypeDef *hmpu)
+{
+	MPU9250_ReadRegs(hmpu, 0, hmpu->register_map, 127);
+}
+	
