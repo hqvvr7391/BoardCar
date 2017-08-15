@@ -1,0 +1,77 @@
+(ExpressProject ""
+  (ProjectVersion "19981106")
+  (Folder "Design Resources"
+    (Folder "Library"
+      (File ".\connectors.olb"
+        (Type "Schematic Library"))
+      (File "e:\mb1137.olb"
+        (Type "Schematic Library")))
+    (File ".\connectors.olb"
+      (Type "Schematic Library"))
+    (BuildFileAddedOrDeleted "x")
+    (CompileFileAddedOrDeleted "x")
+    (NoModify)
+    (File "e:\connectors.dsn"
+      (Type "Schematic Design")))
+  (Folder "Outputs")
+  (Folder "Referenced Projects")
+  (GlobalState
+    (FileView
+      (Path "Design Resources")
+      (Path "Design Resources" "e:\connectors.dsn")
+      (Path "Design Resources" "e:\connectors.dsn" "Connectors.SchDoc")
+      (Path "Design Resources" "e:\connectors.dsn" "Design Cache")
+      (Select "Design Resources" "e:\connectors.dsn"))
+    (HierarchyView)
+    (Doc
+      (Type "COrCapturePMDoc")
+      (Frame
+        (Placement "44 0 1 -1 -1 -9 -38 0 200 0 405"))
+      (Tab 0))
+    (Doc
+      (Type "COrPartDoc")
+      (Frame
+        (Placement "44 0 1 -1 -1 -9 -38 96 1748 96 548")
+        (PackageScroll "0 0")
+        (PackageZoom "1")
+        (PartPackage "Part")
+        (Scroll "0 41")
+        (Zoom "90"))
+      (Path "E:\MB1137.OLB")
+      (Package "Header 36X2"))
+    (Doc
+      (Type "COrSchematicDoc")
+      (Frame
+        (Placement "44 2 3 -1 -1 -9 -38 64 1716 64 516")
+        (Scroll "-48 96")
+        (Zoom "110")
+        (Occurrence "/"))
+      (Path "E:\CONNECTORS.DSN")
+      (Schematic "Connectors.SchDoc")
+      (Page "Connectors.SchDoc")))
+  (MPSSessionName "ljh70")
+  (PartMRUSelector
+    (VCC_BAR
+      (LibraryName "C:\CADENCE\SPB_16.6\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    (GND_SIGNAL
+      (LibraryName "C:\CADENCE\SPB_16.6\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    ("GND_FIELD SIGNAL"
+      (LibraryName "C:\CADENCE\SPB_16.6\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    ("Circuit Breaker"
+      (FullPartName "Circuit Breaker.Normal")
+      (LibraryName "E:\MB1137.OLB")
+      (DeviceIndex "0"))
+    (GND
+      (LibraryName "C:\CADENCE\SPB_16.6\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    ("Circuit Breaker_close"
+      (FullPartName "Circuit Breaker_close.Normal")
+      (LibraryName "E:\MB1137.OLB")
+      (DeviceIndex "0"))
+    ("Header 36X2"
+      (FullPartName "Header 36X2.Normal")
+      (LibraryName "E:\MB1137.OLB")
+      (DeviceIndex "0"))))
