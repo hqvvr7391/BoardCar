@@ -41,7 +41,7 @@ void Max11270_DataRead(uint8_t * buffer)
 	uint8_t mesg = 0xCD;
 
 	
-	if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4) == 0)
+	if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) == 0)
 	{
 		CSB_LOW;
 		HAL_SPI_Transmit(&hspi1, &mesg, 1, 0);

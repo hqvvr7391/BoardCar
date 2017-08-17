@@ -20,8 +20,7 @@
       (Path "Design Resources")
       (Path "Design Resources" "e:\connectors.dsn")
       (Path "Design Resources" "e:\connectors.dsn" "Connectors.SchDoc")
-      (Path "Design Resources" "e:\connectors.dsn" "Design Cache")
-      (Select "Design Resources" "e:\connectors.dsn"))
+      (Path "Design Resources" "e:\connectors.dsn" "Design Cache"))
     (HierarchyView)
     (Doc
       (Type "COrCapturePMDoc")
@@ -29,21 +28,10 @@
         (Placement "44 0 1 -1 -1 -9 -38 0 200 0 405"))
       (Tab 0))
     (Doc
-      (Type "COrPartDoc")
-      (Frame
-        (Placement "44 0 1 -1 -1 -9 -38 96 1748 96 548")
-        (PackageScroll "0 0")
-        (PackageZoom "1")
-        (PartPackage "Part")
-        (Scroll "0 41")
-        (Zoom "90"))
-      (Path "E:\MB1137.OLB")
-      (Package "Header 36X2"))
-    (Doc
       (Type "COrSchematicDoc")
       (Frame
         (Placement "44 2 3 -1 -1 -9 -38 64 1716 64 516")
-        (Scroll "-48 96")
+        (Scroll "-48 316")
         (Zoom "110")
         (Occurrence "/"))
       (Path "E:\CONNECTORS.DSN")
@@ -51,6 +39,9 @@
       (Page "Connectors.SchDoc")))
   (MPSSessionName "ljh70")
   (PartMRUSelector
+    (PORTLEFT-R
+      (LibraryName "C:\CADENCE\SPB_16.6\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
     (VCC_BAR
       (LibraryName "C:\CADENCE\SPB_16.6\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
       (DeviceIndex "0"))
