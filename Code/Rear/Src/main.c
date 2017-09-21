@@ -80,8 +80,9 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	uint8_t R_buffer_1[3],R_buffer_2[3],Conf=0x00;
-	uint32_t Reciver_1=0, Reciver_2=0;
+	uint8_t R_buffer_1[3],R_buffer_2[3],R_buffer_3[3],R_buffer_4[3],Conf=0x00;
+	uint32_t Reciver_1=0, Reciver_2=0,Reciver_3=0,Reciver_4=0;
+	uint8_t CycleEnd[1]={0x01};
 
   /* USER CODE END 1 */
 
@@ -125,6 +126,8 @@ int main(void)
 	Max11270_writeReg8_2(CTRL1,Conf);
 	Conf=PGAEN|MAX11270_GAIN4;
 	Max11270_writeReg8_2(CTRL2,Conf);
+	
+	HAL_UART_Transmit(&huart1,CycleEnd,1,10); //front start
 
   /* USER CODE END 2 */
 
@@ -136,6 +139,11 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 		
+		 //Max11270_readReg8_2(CTRL1,R_buffer_2);		//-----register status read
+		 //Max11270_readReg8_2(CTRL2,R_buffer_2+1);
+		
+
+		
 		Max11270_CovCmd_1(MAX11270_RATE1000); //conversion start
 		Max11270_DataRead_1(R_buffer_1);
 	
@@ -143,35 +151,42 @@ int main(void)
 		Max11270_CovCmd_2(MAX11270_RATE1000);
 		Max11270_DataRead_2(R_buffer_2);
 		
+		//HAL_Delay(0);
 		
-		// Max11270_readReg8_1(CTRL1,R_buffer_2);		//-----register status read
-		// Max11270_readReg8_1(CTRL2,R_buffer_2+1);
+		if(huart1.RxState != HAL_UART_STATE_BUSY_RX) //front datat receive
+		  HAL_UART_Receive(&huart1,R_buffer_3,3,10);
 		
-//			Reciver_1=0; //data read---32bit
-//			Reciver_1 = (R_buffer_1[0]&0xFFFFFF)<<16;
-//			Reciver_1 |= (R_buffer_1[1]&0xFFFFFF)<<8;
-//			Reciver_1 |= R_buffer_1[2];
+	
 		
-			/*Reciver_2=0;
+	/*		Reciver_1=0; //data read---32bit
+			Reciver_1 = (R_buffer_1[0]&0xFFFFFF)<<16;
+			Reciver_1 |= (R_buffer_1[1]&0xFFFFFF)<<8;
+			Reciver_1 |= R_buffer_1[2];
+		
+			Reciver_2=0;
 			Reciver_2 = (R_buffer_2[0]&0xFFFFFF)<<16;
 			Reciver_2 |= (R_buffer_2[1]&0xFFFFFF)<<8;
 			Reciver_2 |= R_buffer_2[2];*/
 		
+			Reciver_3=0; 
+			Reciver_3 = (R_buffer_3[0]&0xFFFFFF)<<16;
+			Reciver_3 |= (R_buffer_3[1]&0xFFFFFF)<<8;
+			Reciver_3 |= R_buffer_3[2];
 		
-/*			if(Reciver_1<=262143)
+			if(Reciver_3<=262143)
 			{
 				VescUartSetDutyCycle(0.1);
 				//VescUartSetCurrent(1.0);
 			}
-			else if(Reciver_1>262143)
+			else if(Reciver_3>262143)
 				VescUartSetDutyCycle(0.3);
 			
+			HAL_UART_Transmit(&huart1,CycleEnd,1,10); // bcuz of front-rear time delay
 		
 		}	
-*/
+
 		
   }
-}
 
 
   
@@ -294,8 +309,8 @@ static void MX_UART4_Init(void)
 {
 
   huart4.Instance = UART4;
-  huart4.Init.BaudRate = 115200;
-  huart4.Init.WordLength = UART_WORDLENGTH_7B;
+  huart4.Init.BaudRate = 9600;
+  huart4.Init.WordLength = UART_WORDLENGTH_8B;
   huart4.Init.StopBits = UART_STOPBITS_1;
   huart4.Init.Parity = UART_PARITY_NONE;
   huart4.Init.Mode = UART_MODE_TX_RX;
