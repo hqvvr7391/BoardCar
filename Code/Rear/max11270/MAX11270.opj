@@ -60,8 +60,7 @@
       (Path "Design Resources" ".\max11270.dsn" "SCHEMATIC1")
       (Path "Design Resources" ".\max11270.dsn" "Design Cache")
       (Path "Design Resources" "Library")
-      (Path "Design Resources" "Library" "..\library\library1.olb")
-      (Select "Design Resources"))
+      (Select "Design Resources" ".\max11270.dsn" "SCHEMATIC1" "PAGE1"))
     (HierarchyView)
     (Doc
       (Type "COrCapturePMDoc")
@@ -71,11 +70,11 @@
     (Doc
       (Type "COrSchematicDoc")
       (Frame
-        (Placement "44 2 3 -1 -1 -9 -38 96 1780 96 444")
-        (Scroll "119 320")
+        (Placement "44 0 1 -1 -1 -9 -38 64 1716 64 516")
+        (Scroll "64 109")
         (Zoom "200")
         (Occurrence "/"))
-      (Path "C:\CADENCE\SPB_16.6\TOOLS\CAPTURE\MAX11270\MAX11270.DSN")
+      (Path "C:\USERS\LJH70\DESKTOP\BOARDCAR\CODE\REAR\MAX11270\MAX11270.DSN")
       (Schematic "SCHEMATIC1")
       (Page "PAGE1")))
   (MPSSessionName "ljh70"))

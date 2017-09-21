@@ -41,6 +41,7 @@
 
 /* USER CODE BEGIN Includes */
 #include "maxim-max11270.h"
+#include "VescUart.h"
 
 
 /* USER CODE END Includes */
@@ -48,6 +49,10 @@
 /* Private variables ---------------------------------------------------------*/
 
 SPI_HandleTypeDef hspi1;
+SPI_HandleTypeDef hspi2;
+
+UART_HandleTypeDef huart4;
+UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -58,6 +63,9 @@ SPI_HandleTypeDef hspi1;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_SPI2_Init(void);
+static void MX_USART1_UART_Init(void);
+static void MX_UART4_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -72,8 +80,8 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	uint8_t R_buffer[3],Conf=0x00; 
-	
+	uint8_t R_buffer_1[3],R_buffer_2[3],Conf=0x00;
+	uint32_t Reciver_1=0, Reciver_2=0;
 
   /* USER CODE END 1 */
 
@@ -96,18 +104,27 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_SPI1_Init();
+  MX_SPI2_Init();
+  MX_USART1_UART_Init();
+  MX_UART4_Init();
 
   /* USER CODE BEGIN 2 */
-	RSTB_HIGH;
-	SYNC_LOW;
+	RSTB_HIGH_1;
+	SYNC_LOW_1;
+	
+	RSTB_HIGH_2;
+	SYNC_LOW_2;
 	
 	
 	Conf=CONTSC|SCYCLE|FORMAT|U;
-	Max11270_writeReg8(CTRL1,Conf);
+	Max11270_writeReg8_1(CTRL1,Conf);
+	Conf=PGAEN|MAX11270_GAIN1;
+	Max11270_writeReg8_1(CTRL2,Conf);
 	
-	
+	Conf=CONTSC|SCYCLE|FORMAT|U;
+	Max11270_writeReg8_2(CTRL1,Conf);
 	Conf=PGAEN|MAX11270_GAIN4;
-	Max11270_writeReg8(CTRL2,Conf);
+	Max11270_writeReg8_2(CTRL2,Conf);
 
   /* USER CODE END 2 */
 
@@ -119,20 +136,48 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 		
-		Max11270_CovCmd(MAX11270_RATE1000);
-		Max11270_DataRead(R_buffer);
-		
-		
-		//Max11270_readReg8(CTRL1,R_buffer); -----register status read
+		Max11270_CovCmd_1(MAX11270_RATE1000); //conversion start
+		Max11270_DataRead_1(R_buffer_1);
 	
 		
+		Max11270_CovCmd_2(MAX11270_RATE1000);
+		Max11270_DataRead_2(R_buffer_2);
+		
+		
+		// Max11270_readReg8_1(CTRL1,R_buffer_2);		//-----register status read
+		// Max11270_readReg8_1(CTRL2,R_buffer_2+1);
+		
+//			Reciver_1=0; //data read---32bit
+//			Reciver_1 = (R_buffer_1[0]&0xFFFFFF)<<16;
+//			Reciver_1 |= (R_buffer_1[1]&0xFFFFFF)<<8;
+//			Reciver_1 |= R_buffer_1[2];
+		
+			/*Reciver_2=0;
+			Reciver_2 = (R_buffer_2[0]&0xFFFFFF)<<16;
+			Reciver_2 |= (R_buffer_2[1]&0xFFFFFF)<<8;
+			Reciver_2 |= R_buffer_2[2];*/
+		
+		
+/*			if(Reciver_1<=262143)
+			{
+				VescUartSetDutyCycle(0.1);
+				//VescUartSetCurrent(1.0);
+			}
+			else if(Reciver_1>262143)
+				VescUartSetDutyCycle(0.3);
+			
+		
+		}	
+*/
+		
   }
+}
 
 
   
   /* USER CODE END 3 */
 
-}
+
 
 /** System Clock Configuration
 */
@@ -141,6 +186,7 @@ void SystemClock_Config(void)
 
   RCC_OscInitTypeDef RCC_OscInitStruct;
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct;
 
     /**Configure the main internal regulator output voltage 
     */
@@ -173,6 +219,14 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_UART4;
+  PeriphClkInitStruct.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
+  PeriphClkInitStruct.Uart4ClockSelection = RCC_UART4CLKSOURCE_PCLK1;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
     /**Configure the Systick interrupt time 
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
@@ -196,7 +250,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -210,6 +264,73 @@ static void MX_SPI1_Init(void)
 
 }
 
+/* SPI2 init function */
+static void MX_SPI2_Init(void)
+{
+
+  hspi2.Instance = SPI2;
+  hspi2.Init.Mode = SPI_MODE_MASTER;
+  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi2.Init.NSS = SPI_NSS_SOFT;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi2.Init.CRCPolynomial = 7;
+  hspi2.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+  hspi2.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
+  if (HAL_SPI_Init(&hspi2) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
+/* UART4 init function */
+static void MX_UART4_Init(void)
+{
+
+  huart4.Instance = UART4;
+  huart4.Init.BaudRate = 115200;
+  huart4.Init.WordLength = UART_WORDLENGTH_7B;
+  huart4.Init.StopBits = UART_STOPBITS_1;
+  huart4.Init.Parity = UART_PARITY_NONE;
+  huart4.Init.Mode = UART_MODE_TX_RX;
+  huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart4.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart4.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart4.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart4) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
+/* USART1 init function */
+static void MX_USART1_UART_Init(void)
+{
+
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 9600;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
 /** Configure pins as 
         * Analog 
         * Input 
@@ -217,20 +338,7 @@ static void MX_SPI1_Init(void)
         * EVENT_OUT
         * EXTI
      PC1   ------> ETH_MDC
-     PA1   ------> ETH_REF_CLK
-     PA7   ------> ETH_CRS_DV
-     PC4   ------> ETH_RXD0
-     PC5   ------> ETH_RXD1
-     PB13   ------> ETH_TXD1
-     PD8   ------> USART3_TX
-     PD9   ------> USART3_RX
-     PA8   ------> USB_OTG_FS_SOF
-     PA9   ------> USB_OTG_FS_VBUS
-     PA10   ------> USB_OTG_FS_ID
-     PA11   ------> USB_OTG_FS_DM
-     PA12   ------> USB_OTG_FS_DP
-     PG11   ------> ETH_TX_EN
-     PG13   ------> ETH_TXD0
+     PA7   ------> FMC_SDNWE
 */
 static void MX_GPIO_Init(void)
 {
@@ -238,58 +346,40 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct;
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2|GPIO_PIN_11|GPIO_PIN_12, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14|GPIO_PIN_7, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6, GPIO_PIN_SET);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(USB_PowerSwitchOn_GPIO_Port, USB_PowerSwitchOn_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : USER_Btn_Pin */
-  GPIO_InitStruct.Pin = USER_Btn_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  /*Configure GPIO pin : PE3 */
+  GPIO_InitStruct.Pin = GPIO_PIN_3;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(USER_Btn_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : RMII_MDC_Pin RMII_RXD0_Pin RMII_RXD1_Pin */
-  GPIO_InitStruct.Pin = RMII_MDC_Pin|RMII_RXD0_Pin|RMII_RXD1_Pin;
+  /*Configure GPIO pin : PC1 */
+  GPIO_InitStruct.Pin = GPIO_PIN_1;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : RMII_REF_CLK_Pin RMII_CRS_DV_Pin */
-  GPIO_InitStruct.Pin = RMII_REF_CLK_Pin|RMII_CRS_DV_Pin;
+  /*Configure GPIO pin : PA7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
+  GPIO_InitStruct.Alternate = GPIO_AF12_FMC;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PA2 */
-  GPIO_InitStruct.Pin = GPIO_PIN_2;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : RMII_TXD1_Pin */
-  GPIO_InitStruct.Pin = RMII_TXD1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
-  HAL_GPIO_Init(RMII_TXD1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PB1 */
   GPIO_InitStruct.Pin = GPIO_PIN_1;
@@ -297,55 +387,25 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB14 PB7 */
+  /*Configure GPIO pins : PB2 PB11 PB12 */
   GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_11|GPIO_PIN_12;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : STLK_RX_Pin STLK_TX_Pin */
-  GPIO_InitStruct.Pin = STLK_RX_Pin|STLK_TX_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  /*Configure GPIO pin : PG6 */
+  GPIO_InitStruct.Pin = GPIO_PIN_6;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : USB_PowerSwitchOn_Pin */
-  GPIO_InitStruct.Pin = USB_PowerSwitchOn_Pin;
+  /*Configure GPIO pins : PD4 PD5 PD6 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(USB_PowerSwitchOn_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : USB_OverCurrent_Pin */
-  GPIO_InitStruct.Pin = USB_OverCurrent_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(USB_OverCurrent_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : USB_SOF_Pin USB_ID_Pin USB_DM_Pin USB_DP_Pin */
-  GPIO_InitStruct.Pin = USB_SOF_Pin|USB_ID_Pin|USB_DM_Pin|USB_DP_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF10_OTG_FS;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : USB_VBUS_Pin */
-  GPIO_InitStruct.Pin = USB_VBUS_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(USB_VBUS_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : RMII_TX_EN_Pin RMII_TXD0_Pin */
-  GPIO_InitStruct.Pin = RMII_TX_EN_Pin|RMII_TXD0_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
-  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
 }
 
