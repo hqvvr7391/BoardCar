@@ -3,9 +3,6 @@
 
 #include "stm32f7xx_hal.h"
 
-extern SPI_HandleTypeDef hspi1;
-extern SPI_HandleTypeDef hspi2;
-
 typedef struct 
 {
 	SPI_HandleTypeDef	hspi;
@@ -33,19 +30,6 @@ typedef struct
 
 } MAX_SelectTypeDef;
 
-#define CSB_LOW_1 	HAL_GPIO_WritePin(GPIOB,GPIO_PIN_2,GPIO_PIN_RESET)
-#define CSB_HIGH_1 	HAL_GPIO_WritePin(GPIOB,GPIO_PIN_2,GPIO_PIN_SET)
-#define RSTB_LOW_1 	HAL_GPIO_WritePin(GPIOB,GPIO_PIN_12,GPIO_PIN_RESET)
-#define RSTB_HIGH_1 HAL_GPIO_WritePin(GPIOB,GPIO_PIN_12,GPIO_PIN_SET)
-#define SYNC_HIGH_1 HAL_GPIO_WritePin(GPIOB,GPIO_PIN_11,GPIO_PIN_SET)
-#define SYNC_LOW_1 	HAL_GPIO_WritePin(GPIOB,GPIO_PIN_11,GPIO_PIN_RESET)
-
-#define CSB_LOW_2 	HAL_GPIO_WritePin(GPIOD,GPIO_PIN_6,GPIO_PIN_RESET)
-#define CSB_HIGH_2 	HAL_GPIO_WritePin(GPIOD,GPIO_PIN_6,GPIO_PIN_SET)
-#define RSTB_LOW_2 	HAL_GPIO_WritePin(GPIOD,GPIO_PIN_4,GPIO_PIN_RESET)
-#define RSTB_HIGH_2 HAL_GPIO_WritePin(GPIOD,GPIO_PIN_4,GPIO_PIN_SET)
-#define SYNC_HIGH_2 HAL_GPIO_WritePin(GPIOD,GPIO_PIN_5,GPIO_PIN_SET)
-#define SYNC_LOW_2 	HAL_GPIO_WritePin(GPIOD,GPIO_PIN_5,GPIO_PIN_RESET)
 
 // MAX11210 8-bit Command unsigned char
 
@@ -161,16 +145,16 @@ typedef struct
 #endif
 
 
-///////>>>>>>>>SPI1<<<<<<<,//////////////
-void Max11270_CovCmd_1(unsigned char rate);
-void Max11270_writeReg8_1(unsigned char reg, unsigned char data);
-void Max11270_readReg8_1(uint8_t reg,uint8_t * R_buffer);
-void Max11270_DataRead_1(uint8_t * R_buffer);
-void Max11270_end_1(uint8_t reg, uint8_t conf);
 
-/////////////>>>>>>>>>>SPI2<<<<<<<</////////////
-void Max11270_CovCmd_2(unsigned char rate);
-void Max11270_writeReg8_2(unsigned char reg, unsigned char data);
-void Max11270_readReg8_2(uint8_t reg,uint8_t * R_buffer);
-void Max11270_DataRead_2(uint8_t * R_buffer);
-void Max11270_end_2(uint8_t reg, uint8_t conf);
+void MAX11270_ConvCmd(MAX_SelectTypeDef *hmax);
+void MAX11270_writeReg8(MAX_SelectTypeDef *hmax, uint8_t reg, uint8_t conf);
+void MAX11270_readReg8(MAX_SelectTypeDef *hmax, uint8_t reg, uint8_t *buffer);
+void MAX11270_DataRead(MAX_SelectTypeDef *hmax, uint8_t * buffer);
+//void Max11270_end_1(uint8_t reg, uint8_t conf);
+void MAX11270_Init(MAX_SelectTypeDef *hmax);
+void MAX11270_Select(MAX_SelectTypeDef *hmax);
+void MAX11270_Deselect(MAX_SelectTypeDef *hmax);
+void MAX11270_RSTB_Set(MAX_SelectTypeDef *hmax);
+void MAX11270_RSTB_Reset(MAX_SelectTypeDef *hmax);
+void MAX11270_SYNC_Set(MAX_SelectTypeDef *hmax);
+void MAX11270_SYNC_Reset(MAX_SelectTypeDef *hmax);

@@ -50,6 +50,19 @@
 
 /* Private define ------------------------------------------------------------*/
 
+#define Data_Conv_Pin GPIO_PIN_0
+#define Data_Conv_GPIO_Port GPIOF
+#define Data_Conv_EXTI_IRQn EXTI0_IRQn
+#define Calc_Center_Pin GPIO_PIN_1
+#define Calc_Center_GPIO_Port GPIOF
+#define Calc_Center_EXTI_IRQn EXTI1_IRQn
+#define MCO_Pin GPIO_PIN_0
+#define MCO_GPIO_Port GPIOH
+#define STLK_RX_Pin GPIO_PIN_8
+#define STLK_RX_GPIO_Port GPIOD
+#define STLK_TX_Pin GPIO_PIN_9
+#define STLK_TX_GPIO_Port GPIOD
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
