@@ -181,24 +181,24 @@ int main(void)
   while (1)
   {	  
 		
-		 //Max11270_readReg8_2(CTRL1,R_buffer_2);		//-----register status read
-		 //Max11270_readReg8_2(CTRL2,R_buffer_2+1);
+		// Max11270_readReg8_2(CTRL1,R_buffer_2);		//-----register status read
+		// Max11270_readReg8_2(CTRL2,R_buffer_2+1);
 		
-		HAL_UART_Receive(&huart1,R_buffer_3,1,1);
-		if(R_buffer_3[0]==0x01)  //waiting until rear cycle
-	{	  
+		//HAL_UART_Receive(&huart1,R_buffer_3,1,1);
+		
+	//	if(R_buffer_3[0]==0x01)  //waiting until rear cycle
+	//{	  
+		
 		Max11270_CovCmd_1(MAX11270_RATE1000); //conversion start
 		Max11270_DataRead_1(R_buffer_1);
 	
-		
 		Max11270_CovCmd_2(MAX11270_RATE1000);
 		Max11270_DataRead_2(R_buffer_2);
-		
 		
 		HAL_UART_Transmit(&huart1,R_buffer_2,3,10); //transmit gauge data to rear
 		R_buffer_3[0]=0x00;
 		
-	}
+	//}
 																																			
 		
 																																			/*MPU9250_calcangle(&hmpu1);

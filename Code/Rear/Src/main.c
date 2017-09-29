@@ -53,10 +53,10 @@ SPI_HandleTypeDef hspi2;
 
 UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart1;
+uint32_t R_1,R_2;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -83,6 +83,9 @@ int main(void)
 	uint8_t R_buffer_1[3],R_buffer_2[3],R_buffer_3[3],R_buffer_4[3],Conf=0x00;
 	uint32_t Reciver_1=0, Reciver_2=0,Reciver_3=0,Reciver_4=0;
 	uint8_t CycleEnd[1]={0x01};
+	uint32_t RearData=0,FrontData=0;
+	float Velo=0.0;
+	
 
   /* USER CODE END 1 */
 
@@ -119,12 +122,12 @@ int main(void)
 	
 	Conf=CONTSC|SCYCLE|FORMAT|U;
 	Max11270_writeReg8_1(CTRL1,Conf);
-	Conf=PGAEN|MAX11270_GAIN1;
+	Conf=PGAEN|MAX11270_GAIN32;
 	Max11270_writeReg8_1(CTRL2,Conf);
 	
 	Conf=CONTSC|SCYCLE|FORMAT|U;
 	Max11270_writeReg8_2(CTRL1,Conf);
-	Conf=PGAEN|MAX11270_GAIN4;
+	Conf=PGAEN|MAX11270_GAIN32;
 	Max11270_writeReg8_2(CTRL2,Conf);
 	
 	HAL_UART_Transmit(&huart1,CycleEnd,1,10); //front start
@@ -139,26 +142,27 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 		
-		 //Max11270_readReg8_2(CTRL1,R_buffer_2);		//-----register status read
-		 //Max11270_readReg8_2(CTRL2,R_buffer_2+1);
-		
-
-		
+	//	 Max11270_readReg8_2(CTRL1,R_buffer_2);		//-----register status read
+	//	 Max11270_readReg8_2(CTRL2,R_buffer_2+1);
+				
 		Max11270_CovCmd_1(MAX11270_RATE1000); //conversion start
 		Max11270_DataRead_1(R_buffer_1);
+		R_1 = R_buffer_1[0] <<16 | R_buffer_1[1] << 8 | R_buffer_1[2];
+		
 	
 		
 		Max11270_CovCmd_2(MAX11270_RATE1000);
 		Max11270_DataRead_2(R_buffer_2);
+		R_2 = R_buffer_2[0] <<16 | R_buffer_2[1] <<8 | R_buffer_2[2];
 		
 		//HAL_Delay(0);
 		
 		if(huart1.RxState != HAL_UART_STATE_BUSY_RX) //front datat receive
-		  HAL_UART_Receive(&huart1,R_buffer_3,3,10);
+			HAL_UART_Receive(&huart1,R_buffer_3,3,10);
 		
 	
-		
-	/*		Reciver_1=0; //data read---32bit
+	/*	
+			Reciver_1=0; //data read---32bit
 			Reciver_1 = (R_buffer_1[0]&0xFFFFFF)<<16;
 			Reciver_1 |= (R_buffer_1[1]&0xFFFFFF)<<8;
 			Reciver_1 |= R_buffer_1[2];
@@ -166,21 +170,50 @@ int main(void)
 			Reciver_2=0;
 			Reciver_2 = (R_buffer_2[0]&0xFFFFFF)<<16;
 			Reciver_2 |= (R_buffer_2[1]&0xFFFFFF)<<8;
-			Reciver_2 |= R_buffer_2[2];*/
+			Reciver_2 |= R_buffer_2[2];
 		
 			Reciver_3=0; 
 			Reciver_3 = (R_buffer_3[0]&0xFFFFFF)<<16;
 			Reciver_3 |= (R_buffer_3[1]&0xFFFFFF)<<8;
 			Reciver_3 |= R_buffer_3[2];
-		
-			if(Reciver_3<=262143)
+		*/
+		/*	if(FrontData-RearData>=262143) //acceleration
 			{
-				VescUartSetDutyCycle(0.1);
+				Velo+= 0.01;
+				VescUartSetDutyCycle(Velo);
 				//VescUartSetCurrent(1.0);
 			}
-			else if(Reciver_3>262143)
-				VescUartSetDutyCycle(0.3);
+			else if(RearData-FrontData>=262143) //brake
+			{
+				Velo-=0.1;
+				VescUartSetDutyCycle(Velo);
+			}
+			else if(RearData-FrontData==0) // continuous
+					VescUartSetDutyCycle(Velo);*/
+				
+/*				if(Velo>=0.00 | Velo<=0.04)
+					{
+						for(int i=0;i<500;i++)
+						{
+							Velo+=0.0001;
+							VescUartSetDutyCycle(Velo);
+						}
+				}
+						if(Velo>=0.45)
+						{
+							for(int i=0;i<5000;i++)
+								{
+									Velo-=0.0001;
+									VescUartSetDutyCycle(Velo);
+								}
+							}*/
+						
+							
+						
+							
+	
 			
+		
 			HAL_UART_Transmit(&huart1,CycleEnd,1,10); // bcuz of front-rear time delay
 		
 		}	
