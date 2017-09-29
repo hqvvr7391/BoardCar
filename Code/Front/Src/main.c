@@ -47,12 +47,15 @@
 	
 **************************************************************************/
 
+#include <stdio.h>
 
 
 #include "maxim-max11270.h"
-#include "stdio.h"
 #include "MPU9250.h"
 #include "Filters.h"
+#include "Queue.h"
+#include "VescUart.h"
+#include "buffer.h"
 
 
 /* USER CODE END Includes */
@@ -65,6 +68,7 @@ SPI_HandleTypeDef hspi2;
 TIM_HandleTypeDef htim1;
 
 UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -72,6 +76,11 @@ UART_HandleTypeDef huart1;
 ////																		//MPU_SelectTypeDef hmpu1;
 MAX_SelectTypeDef hmax1;
 MAX_SelectTypeDef hmax2;
+
+
+
+uint8_t hmx1V[6];
+int32_t ind = 0;
 
 uint16_t TIM_Tick = 0;
 uint8_t x=0;
@@ -86,13 +95,14 @@ static void MX_SPI1_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM1_Init(void);
+static void MX_USART3_UART_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 static void MAX1_Init(void);
 static void MAX2_Init(void);
 
-/*static void MPU1_Init(void); ///////////////////////////////////////MPU
+//static void MPU1_Init(void); ///////////////////////////////////////MPU
 
 int fputc(int ch, FILE *f)
 {
@@ -100,7 +110,7 @@ int fputc(int ch, FILE *f)
 	HAL_UART_Transmit(&huart3, temp, 1,2);
 	return(ch);
 }
-																											*/
+																											
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -114,16 +124,11 @@ int main(void)
 
 	uint8_t R_buffer_1[3],R_buffer_2[3],R_buffer_3[3],R_buffer_4[3],Conf=0x00;
 	uint32_t Reciver_1=0, Reciver_2=0,Reciver_3=0,Reciver_4=0;
-	uint8_t CycleEnd[1]={0x01};
-  
-/* uint32_t tickstart = 0;
-	uint16_t i=0;
-	float response[6] = {0,0,0,0,0,0};
-	uint8_t _response[6];
-	float deg;
-	float dt=0.001f;
-	float a = 0.96f;*/
-																																
+	
+	R_buffer_4[0] = 0x35;
+	R_buffer_4[1] = 0x37;
+	R_buffer_4[2] = 0x42;
+  																										
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -140,7 +145,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+//HAL_UART_Transmit_IT(&huart1, hmx1V, 4);
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -149,6 +154,7 @@ int main(void)
   MX_SPI2_Init();
   MX_USART1_UART_Init();
   MX_TIM1_Init();
+  MX_USART3_UART_Init();
 
   /* USER CODE BEGIN 2 */
   
@@ -164,37 +170,43 @@ int main(void)
 	
   /* Initialize all user configured interrupts */
   
-  //HAL_TIM_Base_Start_IT(&htim1);
+  HAL_TIM_Base_Start_IT(&htim1);
+  
   /*
   
   HAL_UART_Receive_IT(&huart3, &c, 1);
   HAL_SPI_TransmitReceive_IT(&hspi1, IT_master_tx, IT_master_rx, 1);
-	
-  */
   
-  /* user code begin */
-
-  /*
   printf("\nHello \r\n");
   
   MPU9250_deselect(&hmpu1);
 
   MPU9250_init(&hmpu1);
   */
-																																						
+  
+  
+  /* user code begin */
+
+  HAL_GPIO_TogglePin(LD2_Pin_GPIO_Port, LD2_Pin_Pin);
+
+  //MAX11270_ConvCmd(&hmax1);
+  MAX11270_ConvCmd(&hmax2);
+  
+  
+  //printf("\nHello \r\n");
+  
+ 
+ 
+																														
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {	  
-	MAX11270_ConvCmd(&hmax1);
-	MAX11270_DataRead(&hmax1);
-	MAX11270_ReadReg16(&hmax1, STAT1, R_buffer_1);
-	 MAX11270_ReadReg8(&hmax1, CTRL1, R_buffer_2);
-
-
-	 HAL_Delay(100);
+	  
+	  
+	  
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -244,8 +256,9 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART1;
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_USART3;
   PeriphClkInitStruct.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
+  PeriphClkInitStruct.Usart3ClockSelection = RCC_USART3CLKSOURCE_PCLK1;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -369,6 +382,27 @@ static void MX_USART1_UART_Init(void)
 
 }
 
+/* USART3 init function */
+static void MX_USART3_UART_Init(void)
+{
+
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 115200;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
 /** Configure pins as 
         * Analog 
         * Input 
@@ -377,8 +411,6 @@ static void MX_USART1_UART_Init(void)
         * EXTI
      PC1   ------> ETH_MDC
      PA7   ------> FMC_SDNWE
-     PD8   ------> USART3_TX
-     PD9   ------> USART3_RX
 */
 static void MX_GPIO_Init(void)
 {
@@ -401,16 +433,17 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6, GPIO_PIN_SET);
 
-  /*Configure GPIO pin : PE3 */
-  GPIO_InitStruct.Pin = GPIO_PIN_3;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(LD2_Pin_GPIO_Port, LD2_Pin_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : Data_Conv_Pin Calc_Center_Pin PF2 PF3 
-                           PF4 PF5 */
-  GPIO_InitStruct.Pin = Data_Conv_Pin|Calc_Center_Pin|GPIO_PIN_2|GPIO_PIN_3 
-                          |GPIO_PIN_4|GPIO_PIN_5;
+  /*Configure GPIO pin : SPI2_RDYB_Pin */
+  GPIO_InitStruct.Pin = SPI2_RDYB_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(SPI2_RDYB_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Data_Conv_Pin PF2 PF4 PF5 */
+  GPIO_InitStruct.Pin = Data_Conv_Pin|GPIO_PIN_2|GPIO_PIN_4|GPIO_PIN_5;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
@@ -431,11 +464,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF12_FMC;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PB1 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  /*Configure GPIO pin : SPI1_RDYB_Pin */
+  GPIO_InitStruct.Pin = SPI1_RDYB_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(SPI1_RDYB_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PB2 PB11 PB12 */
   GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_11|GPIO_PIN_12;
@@ -443,14 +476,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : STLK_RX_Pin STLK_TX_Pin */
-  GPIO_InitStruct.Pin = STLK_RX_Pin|STLK_TX_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PG6 */
   GPIO_InitStruct.Pin = GPIO_PIN_6;
@@ -464,6 +489,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : LD2_Pin_Pin */
+  GPIO_InitStruct.Pin = LD2_Pin_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(LD2_Pin_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 1);
@@ -503,8 +535,11 @@ static void MAX1_Init(void)
 	hmax1.RDYB_GPIOx = GPIOB;
 	hmax1.RDYB_GPIO_PIN = GPIO_PIN_1;
 	
-	hmax1.RATE = MAX11270_RATE1000;
+	hmax1.RATE = MAX11270_RATE6400;
 	hmax1.GAIN = MAX11270_GAIN32;
+	
+	hmax1.Queue.size = 16;
+	define_array(&hmax1.Queue);
 	
 }
 
@@ -524,8 +559,11 @@ static void MAX2_Init(void)
 	hmax2.RDYB_GPIOx = GPIOE;
 	hmax2.RDYB_GPIO_PIN = GPIO_PIN_3;
 	
-	hmax2.RATE = MAX11270_RATE1000;
-	hmax2.GAIN = MAX11270_GAIN4;
+	hmax2.RATE = MAX11270_RATE6400;
+	hmax2.GAIN = MAX11270_GAIN32;
+	
+	hmax2.Queue.size = 16;
+	define_array(&hmax2.Queue);
 	
 }
 
@@ -545,32 +583,28 @@ static void MPU1_Init(void)
 }
 */
 
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim->Instance == TIM1)
 	{
-		switch(TIM_Tick)
+
+		if(TIM_Tick % 10 ==0)	
 		{
-			case 0:
-				__HAL_GPIO_EXTI_GENERATE_SWIT(GPIO_PIN_0);
-				break;
-			case 5:
-				__HAL_GPIO_EXTI_GENERATE_SWIT(GPIO_PIN_1);
-				break;
-			case 20:
-				__HAL_GPIO_EXTI_GENERATE_SWIT(GPIO_PIN_2);
-				break;
+			hmax1.Value = MoveAverage(&hmax1.Queue);
+			hmax2.Value = MoveAverage(&hmax2.Queue);
 			
-			default:
-				break;
 		}
-				
+		
+
+		//////////////////////
 		TIM_Tick++;
 		
 		if(TIM_Tick >= 100-1)
 		{
 			TIM_Tick = 0;
 		}
+		
 	}
 	
 }
@@ -579,25 +613,23 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	switch (GPIO_Pin)
 	{
-		case GPIO_PIN_0:
-			/*MAX11270_ConvCmd(&hmax1);
-			MAX11270_DataRead(&hmax1);
-			
-			MAX11270_ConvCmd(&hmax2);
-			MAX11270_DataRead(&hmax2);*/
-		
-			x = !x;
-			break;
-		
 		case GPIO_PIN_1:
-			HAL_UART_Transmit(&huart1, hmax1.Conv_Data, 3, 1);
-			HAL_UART_Transmit(&huart1, hmax2.Conv_Data, 3, 1);
+			
+			MAX11270_DataRead(&hmax1);
+			enqueue(&hmax1.Queue, hmax1.Conv_TData);
+			dequeue(&hmax1.Queue);
 		
 		
-		
-		//case GPIO_PIN_1:
+		case GPIO_PIN_3:
+			
+			MAX11270_DataRead(&hmax2);
+			enqueue(&hmax2.Queue, hmax2.Conv_TData);
+			dequeue(&hmax2.Queue);
+
 		
 	}
+	
+	
 	
 	
 }

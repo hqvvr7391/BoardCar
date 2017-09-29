@@ -2,6 +2,7 @@
 #define _MAXIM_MAX11270
 
 #include "stm32f7xx_hal.h"
+#include "Queue.h"
 
 extern SPI_HandleTypeDef hspi1;
 extern SPI_HandleTypeDef hspi2;
@@ -9,6 +10,7 @@ extern SPI_HandleTypeDef hspi2;
 typedef struct 
 {
 	SPI_HandleTypeDef	hspi;
+	Queue_TypeDef	Queue;
 
 	GPIO_TypeDef		*CSB_GPIOx;
 	uint16_t 			CSB_GPIO_PIN;
@@ -28,9 +30,9 @@ typedef struct
 	
 	uint8_t	Conv_Data[3];
 	uint32_t	Conv_TData;
+	uint32_t	Value;
 	
-	float Data[3];
-	float temperature;
+
 
 } MAX_SelectTypeDef;
 
@@ -163,3 +165,4 @@ void MAX11270_RSTB_Set(MAX_SelectTypeDef *hmax);
 void MAX11270_RSTB_Reset(MAX_SelectTypeDef *hmax);
 void MAX11270_SYNC_Set(MAX_SelectTypeDef *hmax);
 void MAX11270_SYNC_Reset(MAX_SelectTypeDef *hmax);
+

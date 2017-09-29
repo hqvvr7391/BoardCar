@@ -41,10 +41,27 @@
   /* Includes ------------------------------------------------------------------*/
 
 /* USER CODE BEGIN Includes */
+#define TRUE 1
+#define FALSE 0
 
+#define PI	3.14159265358979323846f
+#define C_Alpha 0.98f
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/
+
+#define SPI2_RDYB_Pin GPIO_PIN_3
+#define SPI2_RDYB_GPIO_Port GPIOE
+#define SPI2_RDYB_EXTI_IRQn EXTI3_IRQn
+#define SPI1_RDYB_Pin GPIO_PIN_1
+#define SPI1_RDYB_GPIO_Port GPIOB
+#define SPI1_RDYB_EXTI_IRQn EXTI1_IRQn
+#define STLK_RX_Pin GPIO_PIN_8
+#define STLK_RX_GPIO_Port GPIOD
+#define STLK_TX_Pin GPIO_PIN_9
+#define STLK_TX_GPIO_Port GPIOD
+#define LD2_Pin_Pin GPIO_PIN_7
+#define LD2_Pin_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

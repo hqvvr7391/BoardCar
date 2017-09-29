@@ -51,11 +51,11 @@ void MAX11270_DataRead(MAX_SelectTypeDef *hmax)
 {
 	uint8_t mesg = 0xCD;
 
-	//while(HAL_GPIO_ReadPin(hmax->RDYB_GPIOx, hmax->RDYB_GPIO_PIN) == RESET);
+	//while(HAL_GPIO_ReadPin(hmax->RDYB_GPIOx, hmax->RDYB_GPIO_PIN) != RESET);
 	
 	MAX11270_Select(hmax);
-	HAL_SPI_Transmit(&hmax->hspi, &mesg, 1, 1);
-	HAL_SPI_Receive(&hmax->hspi, hmax->Conv_Data, 3, 1);
+	HAL_SPI_Transmit(&hmax->hspi, &mesg, 1, 10);
+	HAL_SPI_Receive(&hmax->hspi, hmax->Conv_Data, 3, 10);
 	MAX11270_Deselect(hmax);
 	
 	hmax->Conv_TData = hmax->Conv_Data[0] << 16 |  hmax->Conv_Data[1] << 8 | hmax->Conv_Data[2];
@@ -68,13 +68,16 @@ void MAX11270_Init(MAX_SelectTypeDef *hmax)
 	MAX11270_RSTB_Set(hmax);
 	MAX11270_SYNC_Reset(hmax);
 	
-	Conf = CONTSC | SCYCLE | FORMAT | U;
+	Conf = FORMAT | U |SCYCLE | CONTSC;
 	
 	MAX11270_WriteReg8(hmax, CTRL1, Conf);
+	
+	HAL_Delay(10);
 	
 	Conf =PGAEN | hmax->GAIN;
 	
 	MAX11270_WriteReg8(hmax, CTRL2, Conf);
+	HAL_Delay(10);
 }
 
 
