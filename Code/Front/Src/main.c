@@ -66,6 +66,7 @@ SPI_HandleTypeDef hspi1;
 SPI_HandleTypeDef hspi2;
 
 TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim14;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart3;
@@ -74,8 +75,8 @@ UART_HandleTypeDef huart3;
 /* Private variables ---------------------------------------------------------*/
 
 ////																		//MPU_SelectTypeDef hmpu1;
-MAX_SelectTypeDef hmax1;
-MAX_SelectTypeDef hmax2;
+//MAX_SelectTypeDef hmax1;
+//MAX_SelectTypeDef hmax2;
 
 
 
@@ -85,7 +86,14 @@ int32_t ind = 0;
 uint16_t TIM_Tick = 0;
 uint8_t x=0;
 
+uint32_t check_1=0,check_2=0;
+uint32_t avg_1=0;
+uint32_t avg_2=0;
 
+int data=0;
+float cur=0.0;
+
+	
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -96,6 +104,10 @@ static void MX_SPI2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_USART3_UART_Init(void);
+static void MX_TIM14_Init(void);
+
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+                                
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -124,6 +136,9 @@ int main(void)
 
 	uint8_t R_buffer_1[3],R_buffer_2[3],R_buffer_3[3],R_buffer_4[3],Conf=0x00;
 	uint32_t Reciver_1=0, Reciver_2=0,Reciver_3=0,Reciver_4=0;
+	int sum_1=0,sum_2=0;
+	int duty=0;
+	
 	
 	R_buffer_4[0] = 0x35;
 	R_buffer_4[1] = 0x37;
@@ -155,22 +170,24 @@ int main(void)
   MX_USART1_UART_Init();
   MX_TIM1_Init();
   MX_USART3_UART_Init();
+  MX_TIM14_Init();
 
   /* USER CODE BEGIN 2 */
   
   /* Initialize all user configured peripherals */
   
-  MAX1_Init();
-  MAX2_Init();
+//  MAX1_Init();
+//  MAX2_Init();
   
-  MAX11270_Init(&hmax1);
-  MAX11270_Init(&hmax2);
+  //MAX11270_Init(&hmax1);
+ // MAX11270_Init(&hmax2);
+//	MAX11270_Init(&hmax1);
   
   //MPU1_Init();
 	
   /* Initialize all user configured interrupts */
   
-  HAL_TIM_Base_Start_IT(&htim1);
+  //HAL_TIM_Base_Start_IT(&htim1);
   
   /*
   
@@ -189,31 +206,98 @@ int main(void)
 
   HAL_GPIO_TogglePin(LD2_Pin_GPIO_Port, LD2_Pin_Pin);
 
+ //MAX11270_ConvCmd(&hmax1);
   //MAX11270_ConvCmd(&hmax1);
-  MAX11270_ConvCmd(&hmax2);
   
   
   //printf("\nHello \r\n");
   
  
- 
-																														
+
+	
+  Conf=CONTSC|SCYCLE|FORMAT|U;
+	Max11270_writeReg8_1(CTRL1,Conf);
+	Conf=PGAEN|MAX11270_GAIN32;
+	Max11270_writeReg8_1(CTRL2,Conf);
+	
+	Conf=CONTSC|SCYCLE|FORMAT|U;
+	Max11270_writeReg8_2(CTRL1,Conf);
+	Conf=PGAEN|MAX11270_GAIN4;
+	Max11270_writeReg8_2(CTRL2,Conf);
+	
+	 HAL_TIM_PWM_Start(&htim14, TIM_CHANNEL_1);
+
+	 																							
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+
+  
+  duty = 500;
+  
+
+	
   while (1)
   {	  
-	  
-	  
 	  
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
+		
+		        Max11270_CovCmd_1(MAX11270_RATE1000);
+			//while(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) != 0);
+			Max11270_DataRead_1(R_buffer_1);
+		avg_1 = check_1;
+			check_1 = R_buffer_1[0] <<16 | R_buffer_1[1]<<8 | R_buffer_1[2];
+			if(check_1 <= 775000) check_1 = avg_1;
+	  /*
+		for(int i=0;i<15;i++)
+		{
+				
+			Max11270_CovCmd_1(MAX11270_RATE3200);
+			while(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1) != 0);
+			Max11270_DataRead_1(R_buffer_1);
+	
+			check_1 = R_buffer_1[0] <<16 | R_buffer_1[1]<<8 | R_buffer_1[2];
+			sum_1 += check_1;
+		}
+		avg_1= sum_1/15;
+		sum_1=0;*/
+		
+   duty = 500;
+  
+  
+  __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, duty);
+ 
+   HAL_Delay(10000);
+   
+   
+   TIM_Tick = HAL_GetTick();
+   while((HAL_GetTick() - TIM_Tick) < 3000)
+   {
+	__HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, duty);	
+	   duty =  500 - 150 * (HAL_GetTick() - TIM_Tick) / 3000;
+	
+   }
+   
+   HAL_Delay(3600);
+   
+   TIM_Tick =  HAL_GetTick();
+   while((HAL_GetTick() - TIM_Tick) < 3000)
+   {
+ 
+	   __HAL_TIM_SetCompare(&htim14, TIM_CHANNEL_1, duty);	
+	   duty =  150 * (HAL_GetTick() - TIM_Tick) / 3000 + 350;
+   }
 
-  }
+		
+  
   /* USER CODE END 3 */
 
+	}
+  
 }
 
 /** System Clock Configuration
@@ -358,6 +442,41 @@ static void MX_TIM1_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
+
+}
+
+/* TIM14 init function */
+static void MX_TIM14_Init(void)
+{
+
+  TIM_OC_InitTypeDef sConfigOC;
+
+  htim14.Instance = TIM14;
+  htim14.Init.Prescaler = 159;
+  htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim14.Init.Period = 999;
+  htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  if (HAL_TIM_PWM_Init(&htim14) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim14, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  HAL_TIM_MspPostInit(&htim14);
 
 }
 
@@ -519,7 +638,24 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-static void MAX1_Init(void)
+/*void CTR_Velocity(int val) //Àç±ÍÇÔ¼ö
+{
+		if(val >=73728)
+		{
+			while(1)
+			{
+				cur+=0.0001;
+				VescUartSetDutyCycle(cur);
+			
+			if(val<= 11)
+			{
+				cur-=0.001;
+				VescUartSetDutyCycle(cur);
+			}
+			}
+		}
+}*/
+/*static void MAX1_Init(void)
 {
 	hmax1.hspi = hspi1;
 	
@@ -536,7 +672,7 @@ static void MAX1_Init(void)
 	hmax1.RDYB_GPIO_PIN = GPIO_PIN_1;
 	
 	hmax1.RATE = MAX11270_RATE6400;
-	hmax1.GAIN = MAX11270_GAIN32;
+	hmax1.GAIN = MAX11270_GAIN16;
 	
 	hmax1.Queue.size = 16;
 	define_array(&hmax1.Queue);
@@ -560,12 +696,12 @@ static void MAX2_Init(void)
 	hmax2.RDYB_GPIO_PIN = GPIO_PIN_3;
 	
 	hmax2.RATE = MAX11270_RATE6400;
-	hmax2.GAIN = MAX11270_GAIN32;
+	hmax2.GAIN = MAX11270_GAIN16;
 	
 	hmax2.Queue.size = 16;
 	define_array(&hmax2.Queue);
 	
-}
+}*/
 
 /*
 static void MPU1_Init(void)
@@ -584,7 +720,7 @@ static void MPU1_Init(void)
 */
 
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+/*void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim->Instance == TIM1)
 	{
@@ -608,8 +744,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	}
 	
 }
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+*/
+/*void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	switch (GPIO_Pin)
 	{
@@ -632,7 +768,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	
 	
 	
-}
+}*/
 
 /*
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)

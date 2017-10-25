@@ -210,7 +210,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {	  
-	  //MAX11270_ReadReg8(&hmax1, CTRL2, R_buffer_1);
+	  MAX11270_ReadReg8(&hmax1, CTRL2, R_buffer_1);
 	 //MAX11270_ReadReg8(&hmax2, CTRL2, R_buffer_2);
 	  
   /* USER CODE END WHILE */
