@@ -1,4 +1,4 @@
-/*#ifndef _MAXIM_MAX11270
+#ifndef _MAXIM_MAX11270
 #define _MAXIM_MAX11270
 
 #include "stm32f7xx_hal.h"
@@ -166,7 +166,7 @@ void MAX11270_RSTB_Reset(MAX_SelectTypeDef *hmax);
 void MAX11270_SYNC_Set(MAX_SelectTypeDef *hmax);
 void MAX11270_SYNC_Reset(MAX_SelectTypeDef *hmax);
 
-*/
+
 #ifndef _MAXIM_MAX11270
 #define _MAXIM_MAX11270
 

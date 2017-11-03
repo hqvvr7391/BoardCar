@@ -22,9 +22,9 @@ along with this program.If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include <local_datatypes.h>
 
-extern UART_HandleTypeDef huart1;
-extern UART_HandleTypeDef huart3;
-extern UART_HandleTypeDef huart4;
+
+extern UART_HandleTypeDef huart5;
+extern UART_HandleTypeDef huart7;
 
 
 int ReceiveUartMessage(uint8_t* payloadReceived) {
@@ -40,7 +40,7 @@ int ReceiveUartMessage(uint8_t* payloadReceived) {
 
 	while (1) {
 
-		messageReceived[counter] = HAL_UART_Receive(&huart1,&messageReceived[counter],1,10);
+		messageReceived[counter] = HAL_UART_Receive(&huart5,&messageReceived[counter],1,10);
 		counter++;
 
 		if (counter == 2) {//case if state of 'counter' with last read 1
@@ -150,7 +150,7 @@ int PackSendPayload(uint8_t* payload, int lenPay) {
 #endif // DEBUG
 */
 	//Sending package
-	HAL_UART_Transmit(&huart1, messageSend, count,10);
+	HAL_UART_Transmit(&huart5, messageSend, count,10);
 
 
 	//Returns number of send bytes

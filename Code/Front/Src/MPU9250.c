@@ -748,9 +748,9 @@ void MPU9250_calcangle(MPU_SelectTypeDef *hmpu)
 	hmpu->unfiltered_data[5]  = atan(sqrt(pow(ax,2) + pow(ay,2))/az);
 	
 	
-	hmpu->angle[0] = Complemetary(C_Alpha, hmpu->unfiltered_data[0], hmpu->unfiltered_data[3]);
+	/*hmpu->angle[0] = Complemetary(C_Alpha, hmpu->unfiltered_data[0], hmpu->unfiltered_data[3]);
 	hmpu->angle[1] = Complemetary(C_Alpha, hmpu->unfiltered_data[1], hmpu->unfiltered_data[4]);
-	hmpu->angle[2] = Complemetary(C_Alpha, hmpu->unfiltered_data[2], hmpu->unfiltered_data[5]);
+	hmpu->angle[2] = Complemetary(C_Alpha, hmpu->unfiltered_data[2], hmpu->unfiltered_data[5]);*/
 }
 
 void MPU9250_read_allReg(MPU_SelectTypeDef *hmpu)
