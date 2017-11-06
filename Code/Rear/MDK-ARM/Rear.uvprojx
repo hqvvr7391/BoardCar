@@ -10,7 +10,8 @@
       <TargetName>Rear</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>5060422::V5.06 update 4 (build 422)::ARMCC</pCCUsed>
+      <pCCUsed>5060528::V5.06 update 5 (build 528)::ARMCC</pCCUsed>
+      <uAC6>0</uAC6>
       <TargetOption>
         <TargetCommonOption>
           <Device>STM32F767ZITx</Device>
@@ -335,7 +336,7 @@
               <MiscControls>--C99</MiscControls>
               <Define>USE_HAL_DRIVER,STM32F767xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;                               ../Drivers/STM32F7xx_HAL_Driver/Inc;                               ../Drivers/STM32F7xx_HAL_Driver/Inc/Legacy;                               ../Drivers/CMSIS/Device/ST/STM32F7xx/Include;                               ../Drivers/CMSIS/Include</IncludePath>
+              <IncludePath>../Inc;                                 ../Drivers/STM32F7xx_HAL_Driver/Inc;                                 ../Drivers/STM32F7xx_HAL_Driver/Inc/Legacy;                                 ../Drivers/CMSIS/Device/ST/STM32F7xx/Include;                                 ../Drivers/CMSIS/Include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -380,21 +381,6 @@
           <GroupName>Application/User</GroupName>
           <Files>
             <File>
-              <FileName>stm32f7xx_it.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Src/stm32f7xx_it.c</FilePath>
-            </File>
-            <File>
-              <FileName>main.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Src/main.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f7xx_hal_msp.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Src/stm32f7xx_hal_msp.c</FilePath>
-            </File>
-            <File>
               <FileName>crc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\crc.c</FilePath>
@@ -428,6 +414,21 @@
               <FileName>Queue.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Front\Src\Queue.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f7xx_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Src/stm32f7xx_it.c</FilePath>
+            </File>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Src/main.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f7xx_hal_msp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Src/stm32f7xx_hal_msp.c</FilePath>
             </File>
           </Files>
         </Group>

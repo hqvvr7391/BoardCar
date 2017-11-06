@@ -107,6 +107,9 @@ static void MAX2_Init(void);
 
 uint16_t TIM_Tick = 0;
 uint32_t qu;
+uint8_t Receiver[1]={0};
+uint8_t F_L_Value[3]={0x0A,0x09,0x08},F_R_Value[3]={0};
+
 
 /* USER CODE END 0 */
 
@@ -160,19 +163,38 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  
- 
-	  
-
+		
+		
 
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-
+		HAL_UART_Receive(&huart6,Receiver,1,10);
+		if(Receiver[0]==1)
+			HAL_UART_Transmit(&huart6,F_L_Value,3,10);
+	//	Receiver[0]=0;
+			
+	
+	/*	if(hmax1.Value !=0 && hmax2.Value !=0)
+		{
+			HAL_UART_Receive(&huart6,Receiver,1,10);
+			if(Receiver[0]==0x01)
+			{
+				HAL_UART_Transmit(&huart6,F_L_Value,3,10);
+				HAL_UART_Transmit(&huart6,F_R_Value,3,10);
+		
+			}
+				hmax1.Value=0;
+				hmax2.Value=0;
+				Receiver[0]=0;
+		
+		}*/
+	
   }
+}
   /* USER CODE END 3 */
 
-}
+
 
 /** System Clock Configuration
 */
@@ -367,7 +389,7 @@ static void MX_UART5_Init(void)
 
   huart5.Instance = UART5;
   huart5.Init.BaudRate = 115200;
-  huart5.Init.WordLength = UART_WORDLENGTH_7B;
+  huart5.Init.WordLength = UART_WORDLENGTH_8B;
   huart5.Init.StopBits = UART_STOPBITS_1;
   huart5.Init.Parity = UART_PARITY_NONE;
   huart5.Init.Mode = UART_MODE_TX_RX;
@@ -388,7 +410,7 @@ static void MX_UART7_Init(void)
 
   huart7.Instance = UART7;
   huart7.Init.BaudRate = 115200;
-  huart7.Init.WordLength = UART_WORDLENGTH_7B;
+  huart7.Init.WordLength = UART_WORDLENGTH_8B;
   huart7.Init.StopBits = UART_STOPBITS_1;
   huart7.Init.Parity = UART_PARITY_NONE;
   huart7.Init.Mode = UART_MODE_TX_RX;
@@ -409,7 +431,7 @@ static void MX_USART6_UART_Init(void)
 
   huart6.Instance = USART6;
   huart6.Init.BaudRate = 115200;
-  huart6.Init.WordLength = UART_WORDLENGTH_7B;
+  huart6.Init.WordLength = UART_WORDLENGTH_8B;
   huart6.Init.StopBits = UART_STOPBITS_1;
   huart6.Init.Parity = UART_PARITY_NONE;
   huart6.Init.Mode = UART_MODE_TX_RX;
@@ -658,28 +680,42 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if(TIM_Tick >= 100   - 1) TIM_Tick = 0;
 }
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+/*void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	
-	uint8_t i = 0;
-	if(GPIO_Pin == SPI1_RDYB_Pin)
-	{
-		MAX11270_DataRead(&hmax1);
+	
+		uint8_t i = 0;
+		if(GPIO_Pin == SPI1_RDYB_Pin)
+		{
+			MAX11270_DataRead(&hmax1);
 		
-		enqueue(&hmax1.Queue, hmax1.Conv_TData);
-		hmax1.Value = MoveAverage(hmax1.Value, &hmax1.Queue);		
+			enqueue(&hmax1.Queue, hmax1.Conv_TData);
+			hmax1.Value = MoveAverage(hmax1.Value, &hmax1.Queue);		
+			
+			F_L_Value[0] = hmax1.Value & 0x00FF0000;
+			F_L_Value[1] = hmax1.Value & 0x0000FF00;
+			F_L_Value[2] = hmax1.Value & 0x000000FF;
 
-	}
-	else if(GPIO_Pin == SPI4_RDYB_Pin)
-	{
-		MAX11270_DataRead(&hmax2);
-		enqueue(&hmax2.Queue, hmax2.Conv_TData);
-		hmax2.Value = MoveAverage(hmax2.Value, &hmax2.Queue);
+		}
+		else if(GPIO_Pin == SPI4_RDYB_Pin)
+		{
+			MAX11270_DataRead(&hmax2);
+			enqueue(&hmax2.Queue, hmax2.Conv_TData);
+			hmax2.Value = MoveAverage(hmax2.Value, &hmax2.Queue);
+			
+			F_R_Value[0] = hmax2.Value & 0x00FF0000;
+			F_R_Value[1] = hmax2.Value & 0x0000FF00;
+			F_R_Value[2] = hmax2.Value & 0x000000FF;
 
-	}
+		}
+
+	
+	
+	
+
 	
 }
 
-
+*/
 
 /*
 static void MPU1_Init(void)

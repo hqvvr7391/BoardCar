@@ -41,27 +41,82 @@
   /* Includes ------------------------------------------------------------------*/
 
 /* USER CODE BEGIN Includes */
-#define TRUE 1
-#define FALSE 0
 
-#define PI	3.14159265358979323846f
-#define C_Alpha 0.98f
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/
 
-#define SPI2_RDYB_Pin GPIO_PIN_3
-#define SPI2_RDYB_GPIO_Port GPIOE
-#define SPI2_RDYB_EXTI_IRQn EXTI3_IRQn
-#define SPI1_RDYB_Pin GPIO_PIN_1
-#define SPI1_RDYB_GPIO_Port GPIOB
-#define SPI1_RDYB_EXTI_IRQn EXTI1_IRQn
+#define USER_Btn_Pin GPIO_PIN_13
+#define USER_Btn_GPIO_Port GPIOC
+#define USER_Btn_EXTI_IRQn EXTI15_10_IRQn
+#define MCO_Pin GPIO_PIN_0
+#define MCO_GPIO_Port GPIOH
+#define RMII_MDC_Pin GPIO_PIN_1
+#define RMII_MDC_GPIO_Port GPIOH
+#define RMII_MDCC1_Pin GPIO_PIN_1
+#define RMII_MDCC1_GPIO_Port GPIOC
+#define RMII_REF_CLK_Pin GPIO_PIN_1
+#define RMII_REF_CLK_GPIO_Port GPIOA
+#define RMII_MDIO_Pin GPIO_PIN_2
+#define RMII_MDIO_GPIO_Port GPIOA
+#define RMII_RXD0_Pin GPIO_PIN_4
+#define RMII_RXD0_GPIO_Port GPIOC
+#define RMII_RXD1_Pin GPIO_PIN_5
+#define RMII_RXD1_GPIO_Port GPIOC
+#define SPI4_CSB_Pin GPIO_PIN_13
+#define SPI4_CSB_GPIO_Port GPIOF
+#define SPI4_RDYB_Pin GPIO_PIN_15
+#define SPI4_RDYB_GPIO_Port GPIOE
+#define SPI4_RDYB_EXTI_IRQn EXTI15_10_IRQn
+#define LD3_Pin GPIO_PIN_14
+#define LD3_GPIO_Port GPIOB
 #define STLK_RX_Pin GPIO_PIN_8
 #define STLK_RX_GPIO_Port GPIOD
 #define STLK_TX_Pin GPIO_PIN_9
 #define STLK_TX_GPIO_Port GPIOD
-#define LD2_Pin_Pin GPIO_PIN_7
-#define LD2_Pin_GPIO_Port GPIOB
+#define SPI4_SYNC_Pin GPIO_PIN_12
+#define SPI4_SYNC_GPIO_Port GPIOD
+#define SPI4_RSTB_Pin GPIO_PIN_13
+#define SPI4_RSTB_GPIO_Port GPIOD
+#define USB_PowerSwitchOn_Pin GPIO_PIN_6
+#define USB_PowerSwitchOn_GPIO_Port GPIOG
+#define USB_OverCurrent_Pin GPIO_PIN_7
+#define USB_OverCurrent_GPIO_Port GPIOG
+#define SPI1_RDYB_Pin GPIO_PIN_7
+#define SPI1_RDYB_GPIO_Port GPIOC
+#define SPI1_RDYB_EXTI_IRQn EXTI9_5_IRQn
+#define USB_SOF_Pin GPIO_PIN_8
+#define USB_SOF_GPIO_Port GPIOA
+#define USB_VBUS_Pin GPIO_PIN_9
+#define USB_VBUS_GPIO_Port GPIOA
+#define USB_ID_Pin GPIO_PIN_10
+#define USB_ID_GPIO_Port GPIOA
+#define USB_DM_Pin GPIO_PIN_11
+#define USB_DM_GPIO_Port GPIOA
+#define USB_DP_Pin GPIO_PIN_12
+#define USB_DP_GPIO_Port GPIOA
+#define TMS_Pin GPIO_PIN_13
+#define TMS_GPIO_Port GPIOA
+#define TCK_Pin GPIO_PIN_14
+#define TCK_GPIO_Port GPIOA
+#define SPI3_CSB2_Pin GPIO_PIN_15
+#define SPI3_CSB2_GPIO_Port GPIOA
+#define SPI3_CSB1_Pin GPIO_PIN_2
+#define SPI3_CSB1_GPIO_Port GPIOD
+#define RMII_TX_EN_Pin GPIO_PIN_11
+#define RMII_TX_EN_GPIO_Port GPIOG
+#define RMII_TXD0_Pin GPIO_PIN_13
+#define RMII_TXD0_GPIO_Port GPIOG
+#define SW0_Pin GPIO_PIN_3
+#define SW0_GPIO_Port GPIOB
+#define SPI1_CSB_Pin GPIO_PIN_6
+#define SPI1_CSB_GPIO_Port GPIOB
+#define LD2_Pin GPIO_PIN_7
+#define LD2_GPIO_Port GPIOB
+#define SPI1_RSTB_Pin GPIO_PIN_8
+#define SPI1_RSTB_GPIO_Port GPIOB
+#define SPI1_SYNC_Pin GPIO_PIN_9
+#define SPI1_SYNC_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

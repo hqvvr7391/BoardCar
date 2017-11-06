@@ -31,7 +31,7 @@
 
 #define Ki 0.0f
 
-float MoveAverage(Queue_TypeDef *q);
+float MoveAverage(unsigned  int Value, Queue_TypeDef *q);
 float Complemetary(float C_alpha, float a, float b);
 float *MadgwickQuaternionUpdate(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz);
 float *MahonyQuaternionUpdate(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz);

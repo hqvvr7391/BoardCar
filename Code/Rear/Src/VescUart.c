@@ -22,9 +22,9 @@ along with this program.If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include <local_datatypes.h>
 
-
 extern UART_HandleTypeDef huart5;
-extern UART_HandleTypeDef huart7;
+extern UART_HandleTypeDef huart6;
+
 
 
 int ReceiveUartMessage(uint8_t* payloadReceived) {
@@ -40,8 +40,7 @@ int ReceiveUartMessage(uint8_t* payloadReceived) {
 
 	while (1) {
 
-		messageReceived[counter] = HAL_UART_Receive(&huart5,&messageReceived[counter],1,10);
-		counter++;
+		//messageReceived[counter++] = SERIALIO.read(); //	HAL_UART_Recieve(&huart2,messageReceived,1,10); counter++; 하나씩 읽어
 
 		if (counter == 2) {//case if state of 'counter' with last read 1
 
