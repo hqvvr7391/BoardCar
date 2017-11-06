@@ -64,6 +64,8 @@ SPI_HandleTypeDef hspi1;
 SPI_HandleTypeDef hspi3;
 SPI_HandleTypeDef hspi4;
 
+TIM_HandleTypeDef htim1;
+
 UART_HandleTypeDef huart5;
 UART_HandleTypeDef huart7;
 UART_HandleTypeDef huart6;
@@ -88,6 +90,7 @@ static void MX_SPI4_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_UART7_Init(void);
 static void MX_UART5_Init(void);
+static void MX_TIM1_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -95,11 +98,15 @@ static void MX_UART5_Init(void);
 static void MAX1_Init(void);
 static void MAX2_Init(void);
 
-	// static void MPU1_Init(void);
+	/* static void MPU1_Init(void);
+		*/
 	
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+
+uint16_t TIM_Tick = 0;
+uint32_t qu;
 
 /* USER CODE END 0 */
 
@@ -135,6 +142,7 @@ int main(void)
   MX_SPI1_Init();
   MX_UART7_Init();
   MX_UART5_Init();
+  MX_TIM1_Init();
 
   /* USER CODE BEGIN 2 */
   
@@ -143,6 +151,8 @@ int main(void)
   
   MAX11270_ConvCmd(&hmax1);
   MAX11270_ConvCmd(&hmax2);
+  
+  //HAL_TIM_Base_Start_IT(&htim1);
 
   /* USER CODE END 2 */
 
@@ -150,6 +160,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  
+ 
+	  
 
 
   /* USER CODE END WHILE */
@@ -174,7 +187,7 @@ void SystemClock_Config(void)
     */
   __HAL_RCC_PWR_CLK_ENABLE();
 
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
     /**Initializes the CPU, AHB and APB busses clocks 
     */
@@ -184,7 +197,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 100;
+  RCC_OscInitStruct.PLL.PLLN = 200;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
@@ -205,10 +218,10 @@ void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV4;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_6) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -307,6 +320,41 @@ static void MX_SPI4_Init(void)
   hspi4.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
   hspi4.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
   if (HAL_SPI_Init(&hspi4) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
+/* TIM1 init function */
+static void MX_TIM1_Init(void)
+{
+
+  TIM_ClockConfigTypeDef sClockSourceConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+
+  htim1.Instance = TIM1;
+  htim1.Init.Prescaler = 999;
+  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim1.Init.Period = 999;
+  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim1.Init.RepetitionCounter = 0;
+  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -536,10 +584,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
@@ -565,12 +613,10 @@ static void MAX1_Init(void)
 	hmax1.RATE = MAX11270_RATE3200;
 	hmax1.GAIN = MAX11270_GAIN32;
 	
-	hmax1.Queue.size = 16;
+	hmax1.Queue.size = 8;
 	define_array(&hmax1.Queue);
 	
 	MAX11270_Init(&hmax1);
-  
-	
 }
 
 static void MAX2_Init(void)
@@ -602,16 +648,35 @@ static void MAX2_Init(void)
 
 /* USER Callback */
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) 
-{
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+	
+
+		
+
+	
+ 	TIM_Tick++;
+	if(TIM_Tick >= 100   - 1) TIM_Tick = 0;
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+	
+	uint8_t i = 0;
 	if(GPIO_Pin == SPI1_RDYB_Pin)
 	{
 		MAX11270_DataRead(&hmax1);
+		
+		enqueue(&hmax1.Queue, hmax1.Conv_TData);
+		hmax1.Value = MoveAverage(hmax1.Value, &hmax1.Queue);		
+
 	}
 	else if(GPIO_Pin == SPI4_RDYB_Pin)
 	{
 		MAX11270_DataRead(&hmax2);
+		enqueue(&hmax2.Queue, hmax2.Conv_TData);
+		hmax2.Value = MoveAverage(hmax2.Value, &hmax2.Queue);
+
 	}
+	
 }
 
 

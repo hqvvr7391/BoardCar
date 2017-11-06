@@ -3,7 +3,7 @@
 
 void MAX11270_ConvCmd(MAX_SelectTypeDef *hmax) 
 {
-	uint8_t mesg = (hmax->RATE & 0x0F) | START;
+	uint8_t mesg = (hmax->RATE & 0x0F) | MAX11270_START;
 	
 	MAX11270_Select(hmax);
 	HAL_SPI_Transmit(&hmax->hspi,&mesg,1,1);
@@ -15,7 +15,7 @@ void MAX11270_ConvCmd(MAX_SelectTypeDef *hmax)
 
 void MAX11270_WriteReg8(MAX_SelectTypeDef *hmax, uint8_t reg, uint8_t conf) 
 {
-	uint8_t mesg = ((reg & 0x1F) << 1) | START | MODE;
+	uint8_t mesg = ((reg & 0x1F) << 1) | MAX11270_START | MAX11270_MODE;
 	
 	MAX11270_Select(hmax);
 	HAL_SPI_Transmit(&hmax->hspi, &mesg, 1, 10);
@@ -27,7 +27,7 @@ void MAX11270_WriteReg8(MAX_SelectTypeDef *hmax, uint8_t reg, uint8_t conf)
 
 void MAX11270_ReadReg8(MAX_SelectTypeDef *hmax, uint8_t reg, uint8_t *buffer) 
 {
-	uint8_t mesg = ((reg & 0x1F) << 1) | START | MODE | READ;
+	uint8_t mesg = ((reg & 0x1F) << 1) | MAX11270_START | MAX11270_MODE | MAX11270_READ;
 	
 	MAX11270_Select(hmax);
 	HAL_SPI_Transmit(&hmax->hspi, &mesg, 1, 10);
@@ -38,7 +38,7 @@ void MAX11270_ReadReg8(MAX_SelectTypeDef *hmax, uint8_t reg, uint8_t *buffer)
 
 void MAX11270_ReadReg16(MAX_SelectTypeDef *hmax, uint8_t reg, uint8_t *buffer) 
 {
-	uint8_t mesg = ((reg & 0x1F) << 1) | START | MODE | READ;
+	uint8_t mesg = ((reg & 0x1F) << 1) | MAX11270_START | MAX11270_MODE | MAX11270_READ;
 	
 	MAX11270_Select(hmax);
 	HAL_SPI_Transmit(&hmax->hspi, &mesg, 1, 10);
@@ -50,8 +50,6 @@ void MAX11270_ReadReg16(MAX_SelectTypeDef *hmax, uint8_t reg, uint8_t *buffer)
 void MAX11270_DataRead(MAX_SelectTypeDef *hmax) 
 {
 	uint8_t mesg = 0xCD;
-
-	//while(HAL_GPIO_ReadPin(hmax->RDYB_GPIOx, hmax->RDYB_GPIO_PIN) != RESET);
 	
 	MAX11270_Select(hmax);
 	HAL_SPI_Transmit(&hmax->hspi, &mesg, 1, 10);
@@ -70,15 +68,15 @@ void MAX11270_Init(MAX_SelectTypeDef *hmax)
 	
 	HAL_Delay(10);
 	
-	Conf =  FORMAT | CONTSC;
+	Conf =  MAX11270_FORMAT | MAX11270_CONTSC;
 	
-	MAX11270_WriteReg8(hmax, CTRL1, Conf);
+	MAX11270_WriteReg8(hmax, MAX11270_CTRL1, Conf);
 	
 	HAL_Delay(10);
 	
-	Conf =PGAEN | hmax->GAIN;
+	Conf = MAX11270_PGAEN | hmax->GAIN;
 	
-	MAX11270_WriteReg8(hmax, CTRL2, Conf);
+	MAX11270_WriteReg8(hmax, MAX11270_CTRL2, Conf);
 	HAL_Delay(10);
 }
 

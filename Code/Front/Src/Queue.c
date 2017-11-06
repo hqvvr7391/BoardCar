@@ -1,9 +1,14 @@
 #include "Queue.h"
+#include <stdlib.h>
 
 
 void init(Queue_TypeDef *q){
+	
+	int i;
 	q->front = 0;
 	q->rear = 0;
+	
+	for(i=0; i < q->size; i++)		q->queue[i] = 0;
 } 
 
 int is_empty(Queue_TypeDef *q){
@@ -15,24 +20,35 @@ int is_full(Queue_TypeDef *q){
 	return (q->rear+1) % q->size == q->front;
 }
 
-void enqueue(Queue_TypeDef *q, element item){
+element enqueue(Queue_TypeDef *q, element item){
+	int i = q->rear;
+	
+
+	
+	while((i + 1) % q->size != (q->front + 1) % q->size ) {
+			i = (i + 1) % q->size;
+			q->queue[i] = item;
+		}
+	
 	if (is_full(q)){
-		
+		dequeue(q);
+
 	}
-	else {
-		q->rear = (q->rear+1) % q->size;
-		q->queue[q->rear] = item;
-	}
+	
+	q->rear = (q->rear+1) % q->size;
+	q->queue[q->rear] = item;
+	
+	return q->rear;
 }
 
 element dequeue(Queue_TypeDef *q){
 	if (is_empty(q)){
-		
+		return 0 ;
 	}
-	else {
+	else if(is_full(q)){
 		q->front = (q->front+1) % q->size;
 	}
-	return q->queue[q->front];
+	return q->front;
 }
 
 element peek(Queue_TypeDef *q){
@@ -43,6 +59,8 @@ element peek(Queue_TypeDef *q){
 
 void define_array(Queue_TypeDef *q)
 {
-	q->queue = (int *)malloc(q->size * sizeof(int));
+	q->size = q->size + 1;
+	q->queue = (int *)malloc(q->size* sizeof(int));
+	init(q);
 }
 

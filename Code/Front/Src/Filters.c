@@ -4,18 +4,35 @@
 float q[4] = {1.0f, 0.0f, 0.0f, 0.0f};	// vector to hold quaternion
 float eInt[3] = {0.0f, 0.0f, 0.0f};              // vector to hold integral error for Mahony method
 
-float MoveAverage(Queue_TypeDef *q)
+float MoveAverage(unsigned  int Value, Queue_TypeDef *q)
 {
 	int i;
+	
 	int sum = 0;
 	
-	
+	/*
 	for(i=0; i<= q->size -1;i++)
 	{
 		sum += q->queue[i];
 	}
 	
-	return sum / i;
+	return sum / i;*/
+	
+	if((q->rear+1) % q->size == q->front)	Value = Value + (q->queue[q->rear] - q->queue[q->front]) / (q->size-1);
+		
+	
+	else {
+		i = q->rear;
+		while((i - 1 % q->size) >= q->front)
+		{
+			sum += q->queue[i];
+			i = i - 1 % q->size ;
+		}
+		Value = sum / q->rear;
+	}
+	
+	
+	return Value;
 }
 
 float Complemetary(float C_alpha, float a, float b)

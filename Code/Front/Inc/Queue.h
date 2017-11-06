@@ -15,9 +15,10 @@ typedef struct
 	
 }Queue_TypeDef;
 
+void init(Queue_TypeDef *q);
 int is_empty(Queue_TypeDef *q);
 int is_full(Queue_TypeDef *q);
-void enqueue(Queue_TypeDef *q, element item);
+element enqueue(Queue_TypeDef *q, element item);
 element dequeue(Queue_TypeDef *q);
 void define_array(Queue_TypeDef *q);
 
