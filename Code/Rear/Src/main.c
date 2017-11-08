@@ -46,15 +46,21 @@
 #include "MAX11270.h"
 #include "MPU9250.h"
 
+#include "Protocol.h"
 #include "buffer.h"
 #include "crc.h"
-#include "VescUart.h"
+//#include "VescUart.h"
 
 /* Algorithm */
 
 #include "Filters.h"
 #include "Queue.h"
 
+
+#define F_L	7800000
+#define F_R	7400000
+#define R_L	6600000
+#define R_R	500000
 
 /* USER CODE END Includes */
 
@@ -105,15 +111,16 @@ static void MAX2_Init(void);
 
 /* USER CODE BEGIN 0 */
 
-uint16_t TIM_Tick = 0;
-uint32_t qu;
+uint32_t TIM_Tick = 1;
+uint32_t ms=0;
 
-uint8_t T_buffer[1]={0x01},R_buffer[3]={0},R_buffer_2[3]={0};
-int F_L_Value=0,F_R_Value=0;
-int R_L_Value=0,R_R_Value=0;
-int R_data=0,L_data=0;
-float velo=0.0;
+uint8_t Device[1];
 
+uint8_t Rx_data[24];
+
+
+
+uint32_t Strain_Gauge[4];
 
 /* USER CODE END 0 */
 
@@ -122,6 +129,12 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 	uint8_t R_buffer1[4], R_buffer2[4];
+	uint32_t* temp_strain;
+	uint64_t buffer[4];
+	int i = 0;
+	uint16_t j=0;
+	
+	uint16_t count=0;
 
   /* USER CODE END 1 */
 
@@ -156,10 +169,17 @@ int main(void)
   MAX1_Init();
   MAX2_Init();
   
-  MAX11270_ConvCmd(&hmax1);
+  
+  HAL_TIM_Base_Start_IT(&htim1);
+  
+   MAX11270_ConvCmd(&hmax1);
   MAX11270_ConvCmd(&hmax2);
   
-  //HAL_TIM_Base_Start_IT(&htim1);
+  
+  HAL_Delay(3000);	
+  
+  HAL_GPIO_WritePin(LD3_GPIO_Port,LD3_Pin, GPIO_PIN_RESET);  
+  
 
   /* USER CODE END 2 */
 
@@ -168,69 +188,43 @@ int main(void)
   while (1)
   {
 	  
- 
-	  HAL_UART_Transmit(&huart6,T_buffer,1,10);
-		HAL_UART_Receive(&huart6,R_buffer,3,10);
 
+	HAL_UART_Receive_IT(&huart6, Rx_data, 9);
+	 
+	for(i = 0; i<9;i++) {
+		if(Rx_data[i] == 0x80) {
+			temp_strain = Strain_Gauge;
+			if(Rx_data[i+1] == 0x10)	{
+				Strain_Gauge[0] = (Rx_data[i+2] << 16 | Rx_data[i+3] << 8  | Rx_data[i+4]) - buffer[0]; 
+				break;
+			}
+			
+			else if(Rx_data[i+1] == 0x11) {
+				Strain_Gauge[1] = (Rx_data[i+2] << 16 | Rx_data[i+3] << 8  | Rx_data[i+4]) - buffer[1];
+				break;
+			}
+		}
+		Strain_Gauge[2] = hmax1.Value - buffer[2];
+		Strain_Gauge[3] = hmax2.Value - buffer[3];
+		
+		for(i=0 ; i<4;i++) {
+			if(Strain_Gauge[i] & 0xFF000000)	Strain_Gauge[i] = temp_strain[i];
+		}
+	}	
+		
 
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	/*if(R_L_Value!=0 && R_R_Value !=0)
-	{
-			HAL_UART_Transmit(&huart6,T_buffer,1,10);
-	
-			HAL_UART_Receive(&huart6,R_buffer,3,10);
-			HAL_UART_Receive(&huart6,R_buffer_2,3,10);
-			
-		
-		
-		F_L_Value = R_buffer[0]<<16 | R_buffer[1]<<8 | R_buffer[2];
-		F_R_Value = R_buffer_2[0]<<16 | R_buffer[1]<<8 | R_buffer_2[2];
-		
-		L_data = F_L_Value - R_R_Value;
-		R_data = F_R_Value - R_L_Value;
-		
-		R_L_Value =0;
-		R_R_Value =0;
-		
-		
-		
-		if(F_L_Value>1000 && F_R_Value>1000 && R_R_Value>1000 && R_L_Value>1000)
-		{
-			if(L_data>0 && R_data>0)
-			{
-				VescUartSetDutyCycle(velo);
-				velo+=0.001;
-			}
-		
-			else if(L_data<0 && R_data<0)
-			{
-				VescUartSetDutyCycle(velo);
-				velo-=0.01;
-			}
-		
-			else if(L_data>0 &&R_data<0)
-			{
-				VescUartSetDutyCycle(velo);
-			}
-		
-			else if(L_data<0 && R_data>0)
-			{
-				VescUartSetDutyCycle(velo);
-			}
-		}
-		else
-			VescUartSetDutyCycle(0.0);
-		
 
-	}
 	
-	*/
- }
+  }
+  
+}
   /* USER CODE END 3 */
 
-}
+
+
 
 /** System Clock Configuration
 */
@@ -392,7 +386,7 @@ static void MX_TIM1_Init(void)
   TIM_MasterConfigTypeDef sMasterConfig;
 
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 999;
+  htim1.Init.Prescaler = 99;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim1.Init.Period = 999;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -425,7 +419,7 @@ static void MX_UART5_Init(void)
 
   huart5.Instance = UART5;
   huart5.Init.BaudRate = 115200;
-  huart5.Init.WordLength = UART_WORDLENGTH_8B;
+  huart5.Init.WordLength = UART_WORDLENGTH_7B;
   huart5.Init.StopBits = UART_STOPBITS_1;
   huart5.Init.Parity = UART_PARITY_NONE;
   huart5.Init.Mode = UART_MODE_TX_RX;
@@ -446,7 +440,7 @@ static void MX_UART7_Init(void)
 
   huart7.Instance = UART7;
   huart7.Init.BaudRate = 115200;
-  huart7.Init.WordLength = UART_WORDLENGTH_8B;
+  huart7.Init.WordLength = UART_WORDLENGTH_7B;
   huart7.Init.StopBits = UART_STOPBITS_1;
   huart7.Init.Parity = UART_PARITY_NONE;
   huart7.Init.Mode = UART_MODE_TX_RX;
@@ -668,10 +662,10 @@ static void MAX1_Init(void)
 	hmax1.RDYB_GPIOx = SPI1_RDYB_GPIO_Port;
 	hmax1.RDYB_GPIO_PIN = SPI1_RDYB_Pin;
 	
-	hmax1.RATE = MAX11270_RATE3200;
+	hmax1.RATE = MAX11270_RATE1600;
 	hmax1.GAIN = MAX11270_GAIN32;
 	
-	hmax1.Queue.size = 8;
+	hmax1.Queue.size = 20;
 	define_array(&hmax1.Queue);
 	
 	MAX11270_Init(&hmax1);
@@ -708,15 +702,45 @@ static void MAX2_Init(void)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	
+	
+	if((TIM_Tick) % 50 == 0) {
+		Device[0] = 0x10;
+		HAL_UART_Transmit(&huart6, Device, 1,10);
+	}
 
+	if((TIM_Tick + 25) % 50 == 0) {
 		
+		Device[0] = 0x11;
+		HAL_UART_Transmit(&huart6, Device, 1,10);
+	}
 
 	
+	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
  	TIM_Tick++;
-	if(TIM_Tick >= 100   - 1) TIM_Tick = 0;
+	if(TIM_Tick >= 1000 ) {
+		TIM_Tick = 1;
+		ms++;
+		if(ms >= 100)	ms = 0;
+	}
+		
 }
 
-/*void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+	uint32_t Valu;
+	uint8_t Device;
+	
+	
+	if(huart->Instance == USART6) {
+		
+	}
+}
+
+
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+	
 	
 		uint8_t i = 0;
 		if(GPIO_Pin == SPI1_RDYB_Pin)
@@ -725,76 +749,20 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 		
 			enqueue(&hmax1.Queue, hmax1.Conv_TData);
 			hmax1.Value = MoveAverage(hmax1.Value, &hmax1.Queue);		
-			R_L_Value=hmax1.Value;
-			
+
 		}
-		
 		else if(GPIO_Pin == SPI4_RDYB_Pin)
 		{
 			MAX11270_DataRead(&hmax2);
 			enqueue(&hmax2.Queue, hmax2.Conv_TData);
 			hmax2.Value = MoveAverage(hmax2.Value, &hmax2.Queue);
-			R_R_Value=hmax2.Value;
-		
-		}*/
-		//
-	/*	if(R_L_Value!=0 && R_R_Value !=0)
-		{
-			HAL_UART_Transmit(&huart6,T_buffer,1,10);
-	
-			HAL_UART_Receive(&huart6,R_buffer,3,10);
-			HAL_UART_Receive(&huart6,R_buffer_2,3,10);
 			
-		}
-		
-		F_L_Value = R_buffer[0]<<16 | R_buffer[1]<<8 | R_buffer[2];
-		F_R_Value = R_buffer_2[0]<<16 | R_buffer[1]<<8 | R_buffer_2[2];
-		
-		L_data = F_L_Value - R_R_Value;
-		R_data = F_R_Value - R_L_Value;
-		
-		R_L_Value =0;
-		R_R_Value =0;
-	
-		
-		
-		if(F_L_Value>1000 && F_R_Value>1000 && R_R_Value>1000 && R_L_Value>1000)
-	{
-		if(L_data>0 && R_data>0)
-		{
-			VescUartSetDutyCycle(velo);
-			velo+=0.001;
-		}
-		
-		else if(L_data<0 && R_data<0)
-		{
-			VescUartSetDutyCycle(velo);
-			velo-=0.01;
-		}
-		
-		else if(L_data>0 &&R_data<0)
-		{
-			VescUartSetDutyCycle(velo);
-		}
-		
-		else if(L_data<0 && R_data>0)
-		{
-			VescUartSetDutyCycle(velo);
-		}
-	}
-	else
-		VescUartSetDutyCycle(0.0);
-		
-	
 
-	
-	
-	
-	
-	
+		}
+		
+		//HAL_GPIO_TogglePin(LD3_GPIO_Port,LD3_Pin);
 
-	
-}*/
+}
 
 
 

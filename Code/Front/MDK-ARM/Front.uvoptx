@@ -143,10 +143,43 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>ST-LINKIII-KEIL_SWO</Key>
-          <Name>-U0673FF525750877267235055 -O10446 -SF1800 -C0 -A0 -I0 -HNlocalhost -HP7184 -P2 -N00("ARM CoreSight SW-DP") -D00(5BA02477) -L00(0) -TO19 -TC25000000 -TP21 -TDS800C -TDT0 -TDC1F -TIEFFFFFFFF -TIP8 -FO7 -FD20000000 -FC1000 -FN2 -FF0STM32F7x_2048.FLM -FS08000000 -FL0200000 -FP0($$Device:STM32F767ZITx$CMSIS\Flash\STM32F7x_2048.FLM) -FF1STM32F7xTCM_2048.FLM -FS1200000 -FL1200000 -FP1($$Device:STM32F767ZITx$CMSIS\Flash\STM32F7xTCM_2048.FLM)</Name>
+          <Name>-U0673FF525750877267235055 -O10446 -S1 -C0 -A0 -N00("ARM CoreSight SW-DP") -D00(5BA02477) -L00(0) -TO19 -TC25000000 -TP21 -TDS800C -TDT0 -TDC1F -TIEFFFFFFFF -TIP8 -FO7 -FD20000000 -FC1000 -FN2 -FF0STM32F7x_2048.FLM -FS08000000 -FL0200000 -FP0($$Device:STM32F767ZITx$CMSIS\Flash\STM32F7x_2048.FLM) -FF1STM32F7xTCM_2048.FLM -FS1200000 -FL1200000 -FP1($$Device:STM32F767ZITx$CMSIS\Flash\STM32F7xTCM_2048.FLM)</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
-      <Breakpoint/>
+      <Breakpoint>
+        <Bp>
+          <Number>0</Number>
+          <Type>0</Type>
+          <LineNumber>15</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134218378</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>&lt;1&gt;.\Protocol.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\Front\Protocol.c\15</Expression>
+        </Bp>
+        <Bp>
+          <Number>1</Number>
+          <Type>0</Type>
+          <LineNumber>15</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134218408</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>&lt;1&gt;.\Protocol.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\Front\Protocol.c\15</Expression>
+        </Bp>
+      </Breakpoint>
       <WatchWindow1>
         <Ww>
           <count>0</count>
@@ -168,6 +201,31 @@
           <WinNumber>1</WinNumber>
           <ItemText>Receiver</ItemText>
         </Ww>
+        <Ww>
+          <count>4</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>F_R_Value</ItemText>
+        </Ww>
+        <Ww>
+          <count>5</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>Strain_Gauge</ItemText>
+        </Ww>
+        <Ww>
+          <count>6</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>Rx_data1</ItemText>
+        </Ww>
+        <Ww>
+          <count>7</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>Rx_data</ItemText>
+        </Ww>
+        <Ww>
+          <count>8</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>data_Array</ItemText>
+        </Ww>
       </WatchWindow1>
       <WatchWindow2>
         <Ww>
@@ -188,47 +246,37 @@
         <Ww>
           <count>3</count>
           <WinNumber>2</WinNumber>
-          <ItemText>hmax1.Queue.queue[1]</ItemText>
+          <ItemText>hmax1.Queue.queue[8]</ItemText>
         </Ww>
         <Ww>
           <count>4</count>
           <WinNumber>2</WinNumber>
-          <ItemText>hmax1.Queue.queue[2]</ItemText>
+          <ItemText>data_Array</ItemText>
         </Ww>
         <Ww>
           <count>5</count>
           <WinNumber>2</WinNumber>
-          <ItemText>hmax1.Queue.queue[3]</ItemText>
+          <ItemText>Rx_buffer</ItemText>
         </Ww>
         <Ww>
           <count>6</count>
           <WinNumber>2</WinNumber>
-          <ItemText>hmax1.Queue.queue[4]</ItemText>
+          <ItemText>\\Front\../Src/main.c\Rx_buffer[16]</ItemText>
         </Ww>
         <Ww>
           <count>7</count>
           <WinNumber>2</WinNumber>
-          <ItemText>hmax1.Queue.queue[5]</ItemText>
+          <ItemText>\\Front\../Src/main.c\Rx_buffer[3]</ItemText>
         </Ww>
         <Ww>
           <count>8</count>
           <WinNumber>2</WinNumber>
-          <ItemText>hmax1.Queue.queue[6]</ItemText>
+          <ItemText>\\Front\../Src/main.c\Rx_buffer[7]</ItemText>
         </Ww>
         <Ww>
           <count>9</count>
           <WinNumber>2</WinNumber>
-          <ItemText>hmax1.Queue.queue[7]</ItemText>
-        </Ww>
-        <Ww>
-          <count>10</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>hmax1.Queue.queue[8]</ItemText>
-        </Ww>
-        <Ww>
-          <count>11</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>\\Front\../Src/main.c\qu</ItemText>
+          <ItemText>Rx_data2</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>
@@ -245,7 +293,7 @@
       <DebugFlag>
         <trace>0</trace>
         <periodic>1</periodic>
-        <aLwin>1</aLwin>
+        <aLwin>0</aLwin>
         <aCover>0</aCover>
         <aSer1>0</aSer1>
         <aSer2>0</aSer2>
@@ -257,12 +305,12 @@
         <AscS1>0</AscS1>
         <AscS2>0</AscS2>
         <AscS3>0</AscS3>
-        <aSer3>0</aSer3>
+        <aSer3>1</aSer3>
         <eProf>0</eProf>
         <aLa>0</aLa>
         <aPa1>0</aPa1>
         <AscS4>0</AscS4>
-        <aSer4>0</aSer4>
+        <aSer4>1</aSer4>
         <StkLoc>0</StkLoc>
         <TrcWin>0</TrcWin>
         <newCpu>0</newCpu>
@@ -277,10 +325,6 @@
       <pszMrule></pszMrule>
       <pSingCmds></pSingCmds>
       <pMultCmds></pMultCmds>
-      <pMisraNamep></pMisraNamep>
-      <pszMrulep></pszMrulep>
-      <pSingCmdsp></pSingCmdsp>
-      <pMultCmdsp></pMultCmdsp>
       <DebugDescription>
         <Enable>1</Enable>
         <EnableLog>0</EnableLog>
@@ -636,6 +680,18 @@
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
+    <File>
+      <GroupNumber>3</GroupNumber>
+      <FileNumber>28</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <bDave2>0</bDave2>
+      <PathWithFileName>.\Protocol.c</PathWithFileName>
+      <FilenameWithoutPath>Protocol.c</FilenameWithoutPath>
+      <RteFlg>0</RteFlg>
+      <bShared>0</bShared>
+    </File>
   </Group>
 
   <Group>
@@ -646,7 +702,7 @@
     <RteFlg>0</RteFlg>
     <File>
       <GroupNumber>4</GroupNumber>
-      <FileNumber>28</FileNumber>
+      <FileNumber>29</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>

@@ -46,6 +46,7 @@
 #include "MAX11270.h"
 #include "MPU9250.h"
 
+#include "Protocol.h"
 #include "buffer.h"
 #include "crc.h"
 //#include "VescUart.h"
@@ -105,10 +106,13 @@ static void MAX2_Init(void);
 
 /* USER CODE BEGIN 0 */
 
-uint16_t TIM_Tick = 0;
+uint16_t TIM_Tick = 1;
+
+uint8_t Device[1];
+
+uint8_t Rx_data[20];
+
 uint32_t qu;
-uint8_t Receiver[1]={0};
-uint8_t F_L_Value[3]={0x0A,0x09,0x08},F_R_Value[3]={0};
 
 
 /* USER CODE END 0 */
@@ -118,6 +122,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 	uint8_t R_buffer1[4], R_buffer2[4];
+
 
   /* USER CODE END 1 */
 
@@ -155,7 +160,7 @@ int main(void)
   MAX11270_ConvCmd(&hmax1);
   MAX11270_ConvCmd(&hmax2);
   
-  //HAL_TIM_Base_Start_IT(&htim1);
+  HAL_TIM_Base_Start_IT(&htim1);
 
   /* USER CODE END 2 */
 
@@ -163,36 +168,26 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  
+	////////////////////Front///////////////////////////////// 
+	  
+	HAL_UART_Receive_IT(&huart6, Rx_data, 1);
 		
-		
+
+	
+	
+	
 
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-		HAL_UART_Receive(&huart6,Receiver,1,10);
-		if(Receiver[0]==1)
-			HAL_UART_Transmit(&huart6,F_L_Value,3,10);
-	//	Receiver[0]=0;
-			
-	
-	/*	if(hmax1.Value !=0 && hmax2.Value !=0)
-		{
-			HAL_UART_Receive(&huart6,Receiver,1,10);
-			if(Receiver[0]==0x01)
-			{
-				HAL_UART_Transmit(&huart6,F_L_Value,3,10);
-				HAL_UART_Transmit(&huart6,F_R_Value,3,10);
-		
-			}
-				hmax1.Value=0;
-				hmax2.Value=0;
-				Receiver[0]=0;
-		
-		}*/
+
 	
   }
+  
 }
   /* USER CODE END 3 */
+
 
 
 
@@ -356,7 +351,7 @@ static void MX_TIM1_Init(void)
   TIM_MasterConfigTypeDef sMasterConfig;
 
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 999;
+  htim1.Init.Prescaler = 99;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim1.Init.Period = 999;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -389,7 +384,7 @@ static void MX_UART5_Init(void)
 
   huart5.Instance = UART5;
   huart5.Init.BaudRate = 115200;
-  huart5.Init.WordLength = UART_WORDLENGTH_8B;
+  huart5.Init.WordLength = UART_WORDLENGTH_7B;
   huart5.Init.StopBits = UART_STOPBITS_1;
   huart5.Init.Parity = UART_PARITY_NONE;
   huart5.Init.Mode = UART_MODE_TX_RX;
@@ -410,7 +405,7 @@ static void MX_UART7_Init(void)
 
   huart7.Instance = UART7;
   huart7.Init.BaudRate = 115200;
-  huart7.Init.WordLength = UART_WORDLENGTH_8B;
+  huart7.Init.WordLength = UART_WORDLENGTH_7B;
   huart7.Init.StopBits = UART_STOPBITS_1;
   huart7.Init.Parity = UART_PARITY_NONE;
   huart7.Init.Mode = UART_MODE_TX_RX;
@@ -632,10 +627,10 @@ static void MAX1_Init(void)
 	hmax1.RDYB_GPIOx = SPI1_RDYB_GPIO_Port;
 	hmax1.RDYB_GPIO_PIN = SPI1_RDYB_Pin;
 	
-	hmax1.RATE = MAX11270_RATE3200;
+	hmax1.RATE = MAX11270_RATE1600;
 	hmax1.GAIN = MAX11270_GAIN32;
 	
-	hmax1.Queue.size = 8;
+	hmax1.Queue.size = 20;
 	define_array(&hmax1.Queue);
 	
 	MAX11270_Init(&hmax1);
@@ -672,15 +667,34 @@ static void MAX2_Init(void)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	
-
-		
-
+	
+	//////////////////////////////////////
+	
 	
  	TIM_Tick++;
-	if(TIM_Tick >= 100   - 1) TIM_Tick = 0;
+	if(TIM_Tick >= 1000 ) TIM_Tick = 1;
 }
 
-/*void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+	uint32_t Valu;
+	uint8_t Device;
+	
+	
+	if(huart->Instance == USART6) {
+			
+		if(Rx_data[0] == 0x10)		qu = hmax1.Value;
+		else if(Rx_data[0] == 0x11) 	qu = hmax2.Value;
+
+	Data_Transmit(Rx_data[0], qu ,10);
+	}
+	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+}
+
+
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	
 	
 		uint8_t i = 0;
@@ -690,10 +704,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 		
 			enqueue(&hmax1.Queue, hmax1.Conv_TData);
 			hmax1.Value = MoveAverage(hmax1.Value, &hmax1.Queue);		
-			
-			F_L_Value[0] = hmax1.Value & 0x00FF0000;
-			F_L_Value[1] = hmax1.Value & 0x0000FF00;
-			F_L_Value[2] = hmax1.Value & 0x000000FF;
 
 		}
 		else if(GPIO_Pin == SPI4_RDYB_Pin)
@@ -702,20 +712,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 			enqueue(&hmax2.Queue, hmax2.Conv_TData);
 			hmax2.Value = MoveAverage(hmax2.Value, &hmax2.Queue);
 			
-			F_R_Value[0] = hmax2.Value & 0x00FF0000;
-			F_R_Value[1] = hmax2.Value & 0x0000FF00;
-			F_R_Value[2] = hmax2.Value & 0x000000FF;
 
 		}
+		
+		HAL_GPIO_TogglePin(LD3_GPIO_Port,LD3_Pin);
 
-	
-	
-	
-
-	
 }
 
-*/
+
 
 /*
 static void MPU1_Init(void)

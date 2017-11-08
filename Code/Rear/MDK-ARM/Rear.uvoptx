@@ -143,10 +143,27 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>ST-LINKIII-KEIL_SWO</Key>
-          <Name>-U-O142 -O10446 -SF1800 -C0 -A0 -I0 -HNlocalhost -HP7184 -P2 -N00("ARM CoreSight SW-DP") -D00(5BA02477) -L00(0) -TO18 -TC10000000 -TP21 -TDS8007 -TDT0 -TDC1F -TIEFFFFFFFF -TIP8 -FO7 -FD20000000 -FC1000 -FN2 -FF0STM32F7x_2048.FLM -FS08000000 -FL0200000 -FP0($$Device:STM32F767ZITx$CMSIS\Flash\STM32F7x_2048.FLM) -FF1STM32F7xTCM_2048.FLM -FS1200000 -FL1200000 -FP1($$Device:STM32F767ZITx$CMSIS\Flash\STM32F7xTCM_2048.FLM)</Name>
+          <Name>-U-O142 -O10446 -S1 -C0 -A0 -N00("ARM CoreSight SW-DP") -D00(5BA02477) -L00(0) -TO18 -TC10000000 -TP21 -TDS8007 -TDT0 -TDC1F -TIEFFFFFFFF -TIP8 -FO7 -FD20000000 -FC1000 -FN2 -FF0STM32F7x_2048.FLM -FS08000000 -FL0200000 -FP0($$Device:STM32F767ZITx$CMSIS\Flash\STM32F7x_2048.FLM) -FF1STM32F7xTCM_2048.FLM -FS1200000 -FL1200000 -FP1($$Device:STM32F767ZITx$CMSIS\Flash\STM32F7xTCM_2048.FLM)</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
-      <Breakpoint/>
+      <Breakpoint>
+        <Bp>
+          <Number>0</Number>
+          <Type>0</Type>
+          <LineNumber>15</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>0</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>0</BreakIfRCount>
+          <Filename>&lt;1&gt;.\Protocol.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression></Expression>
+        </Bp>
+      </Breakpoint>
       <WatchWindow1>
         <Ww>
           <count>0</count>
@@ -156,32 +173,12 @@
         <Ww>
           <count>1</count>
           <WinNumber>1</WinNumber>
-          <ItemText>TIM_Tick</ItemText>
+          <ItemText>Strain_Gauge</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>1</WinNumber>
-          <ItemText>hmax2</ItemText>
-        </Ww>
-        <Ww>
-          <count>3</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>F_L_Value</ItemText>
-        </Ww>
-        <Ww>
-          <count>4</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>F_R_Value</ItemText>
-        </Ww>
-        <Ww>
-          <count>5</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>R_buffer</ItemText>
-        </Ww>
-        <Ww>
-          <count>6</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>\\Rear\../Src/main.c\F_R_Value</ItemText>
+          <ItemText>tmp_array</ItemText>
         </Ww>
       </WatchWindow1>
       <WatchWindow2>
@@ -193,7 +190,12 @@
         <Ww>
           <count>1</count>
           <WinNumber>2</WinNumber>
-          <ItemText>hmax2</ItemText>
+          <ItemText>Rx_data</ItemText>
+        </Ww>
+        <Ww>
+          <count>2</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>buffer</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>
@@ -210,7 +212,7 @@
       <DebugFlag>
         <trace>0</trace>
         <periodic>1</periodic>
-        <aLwin>1</aLwin>
+        <aLwin>0</aLwin>
         <aCover>0</aCover>
         <aSer1>0</aSer1>
         <aSer2>0</aSer2>
@@ -222,12 +224,12 @@
         <AscS1>0</AscS1>
         <AscS2>0</AscS2>
         <AscS3>0</AscS3>
-        <aSer3>0</aSer3>
+        <aSer3>1</aSer3>
         <eProf>0</eProf>
         <aLa>0</aLa>
         <aPa1>0</aPa1>
         <AscS4>0</AscS4>
-        <aSer4>0</aSer4>
+        <aSer4>1</aSer4>
         <StkLoc>0</StkLoc>
         <TrcWin>0</TrcWin>
         <newCpu>0</newCpu>
@@ -242,10 +244,6 @@
       <pszMrule></pszMrule>
       <pSingCmds></pSingCmds>
       <pMultCmds></pMultCmds>
-      <pMisraNamep></pMisraNamep>
-      <pszMrulep></pszMrulep>
-      <pSingCmdsp></pSingCmdsp>
-      <pMultCmdsp></pMultCmdsp>
       <DebugDescription>
         <Enable>1</Enable>
         <EnableLog>0</EnableLog>
